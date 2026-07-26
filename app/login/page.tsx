@@ -52,10 +52,23 @@ function LoginPageContent() {
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (user) {
-      router.push(redirectTo);
+    async function checkAndRedirect() {
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', user.id)
+          .single();
+
+        if (!profile) {
+          router.push('/onboarding');
+        } else {
+          router.push(redirectTo);
+        }
+      }
     }
-  }, [user, redirectTo, router]);
+    checkAndRedirect();
+  }, [user, redirectTo, router, supabase]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,8 +132,19 @@ function LoginPageContent() {
       return;
     }
 
-    // Successful sign in — redirect
-    router.push(redirectTo);
+    if (data.user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', data.user.id)
+        .single();
+
+      if (!profile) {
+        router.push('/onboarding');
+      } else {
+        router.push(redirectTo);
+      }
+    }
   };
 
   const handleForgotPassword = async () => {

@@ -56,15 +56,20 @@ export default function DiscoverPage() {
     async function loadUserProfile() {
       if (user) {
         const supabase = createClient();
-        const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+        const { data } = await supabase
+          .from('profiles')
+          .select('*, profile_interview_types(format)')
+          .eq('id', user.id)
+          .single();
+
         if (data) {
-          // Map snake_case to camelCase
           setCurrentUserProfile({
             ...data,
             targetRole: data.target_role,
             experienceLevel: data.experience_level,
             verifiedInterviewCount: data.verified_interview_count,
-            leaderboardOptIn: data.leaderboard_opt_in
+            leaderboardOptIn: data.leaderboard_opt_in,
+            formats: (data.profile_interview_types || []).map((f: any) => f.format)
           } as UserProfile);
         }
       }
@@ -74,19 +79,21 @@ export default function DiscoverPage() {
     loadUserProfile();
   }, [user]);
 
-  const filteredPeers = peers.filter((peer) => {
-    const matchesSearch =
-      peer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      peer.targetRole.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      peer.bio.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredPeers = peers
+    .filter((peer) => !user || peer.id !== user.id) // Hide own profile from peer marketplace
+    .filter((peer) => {
+      const matchesSearch =
+        peer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        peer.targetRole.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        peer.bio.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesFormat =
-      selectedFormatFilter === 'ALL' || peer.formats.includes(selectedFormatFilter as InterviewFormat);
+      const matchesFormat =
+        selectedFormatFilter === 'ALL' || (peer.formats || []).includes(selectedFormatFilter as InterviewFormat);
 
-    const matchesExp = selectedExpFilter === 'ALL' || peer.experienceLevel.includes(selectedExpFilter);
+      const matchesExp = selectedExpFilter === 'ALL' || (peer.experienceLevel || '').includes(selectedExpFilter);
 
-    return matchesSearch && matchesFormat && matchesExp;
-  });
+      return matchesSearch && matchesFormat && matchesExp;
+    });
 
   const handleSendInvitation = (data: any) => {
     setToastMessage(`Invitation successfully sent! Check your Outgoing Invitations tab.`);
@@ -175,7 +182,7 @@ export default function DiscoverPage() {
               <PeerCard
                 key={peer.id}
                 peer={peer}
-                matchScore={calculateMatchScore(currentUserProfile, peer)}
+                matchScore={currentUserProfile ? calculateMatchScore(currentUserProfile, peer) : undefined}
                 onInviteClick={(p) => setSelectedPeerForInvite(p)}
               />
             ))}

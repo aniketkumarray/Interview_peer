@@ -124,9 +124,10 @@ alter table public.reports enable row level security;
 -- ROW LEVEL SECURITY (RLS) POLICIES (With DROP IF EXISTS guards)
 
 -- Profiles
+drop policy if exists "Public profiles are readable by everyone" on public.profiles;
 drop policy if exists "Public profiles are readable by authenticated users" on public.profiles;
-create policy "Public profiles are readable by authenticated users" 
-  on public.profiles for select using (auth.role() = 'authenticated');
+create policy "Public profiles are readable by everyone" 
+  on public.profiles for select using (true);
 
 drop policy if exists "Users can update own profile" on public.profiles;
 create policy "Users can update own profile" 
@@ -139,7 +140,7 @@ create policy "Users can insert own profile"
 -- Profile Interview Types & Availability
 drop policy if exists "Read public interview types" on public.profile_interview_types;
 create policy "Read public interview types"
-  on public.profile_interview_types for select using (auth.role() = 'authenticated');
+  on public.profile_interview_types for select using (true);
 
 drop policy if exists "Read public availability" on public.availability_windows;
 create policy "Read public availability"
