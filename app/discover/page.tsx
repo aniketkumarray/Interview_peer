@@ -44,8 +44,42 @@ export default function DiscoverPage() {
   useEffect(() => {
     async function loadPeers() {
       try {
-        const data = await getCachedPeers();
-        setPeers(data);
+        const supabase = createClient();
+        let profilesData: any[] | null = null;
+
+        const resWithFormats = await supabase
+          .from('profiles')
+          .select('*, profile_interview_types(format)');
+
+        if (!resWithFormats.error && resWithFormats.data) {
+          profilesData = resWithFormats.data;
+        } else {
+          const resBasic = await supabase.from('profiles').select('*');
+          if (resBasic.data) {
+            profilesData = resBasic.data;
+          }
+        }
+
+        if (profilesData) {
+          const mappedPeers: UserProfile[] = profilesData.map((p: any) => ({
+            id: p.id,
+            email: p.email,
+            name: p.name || 'Anonymous Peer',
+            avatarUrl: p.avatar_url || '',
+            targetRole: p.target_role || 'Software Engineer',
+            industry: p.industry || 'Technology',
+            experienceLevel: p.experience_level || 'Mid-level (3-5 yrs)',
+            timezone: p.timezone || 'UTC+05:30 (India Standard Time)',
+            languages: p.languages || ['English'],
+            bio: p.bio || '',
+            formats: (p.profile_interview_types || []).map((f: any) => f.format) as InterviewFormat[],
+            availability: [],
+            verifiedInterviewCount: p.verified_interview_count || 0,
+            leaderboardOptIn: p.leaderboard_opt_in || false,
+            createdAt: p.created_at,
+          }));
+          setPeers(mappedPeers);
+        }
       } catch (error) {
         console.error("Failed to fetch peers:", error);
       } finally {
@@ -82,10 +116,12 @@ export default function DiscoverPage() {
   const filteredPeers = peers
     .filter((peer) => !user || peer.id !== user.id) // Hide own profile from peer marketplace
     .filter((peer) => {
+      const search = searchQuery.toLowerCase().trim();
       const matchesSearch =
-        peer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        peer.targetRole.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        peer.bio.toLowerCase().includes(searchQuery.toLowerCase());
+        !search ||
+        (peer.name || '').toLowerCase().includes(search) ||
+        (peer.targetRole || '').toLowerCase().includes(search) ||
+        (peer.bio || '').toLowerCase().includes(search);
 
       const matchesFormat =
         selectedFormatFilter === 'ALL' || (peer.formats || []).includes(selectedFormatFilter as InterviewFormat);
