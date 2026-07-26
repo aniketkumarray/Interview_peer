@@ -11,6 +11,11 @@ export default {
       colors: {
         background: "var(--bg-main)",
         card: "var(--card-bg)",
+        sandow: {
+          400: '#FF8533',
+          500: '#FF6B00',
+          600: '#CC5500',
+        },
       },
       keyframes: {
         fadeIn: {

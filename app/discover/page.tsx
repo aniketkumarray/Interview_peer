@@ -1,21 +1,78 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Filter, Sparkles, RefreshCw } from 'lucide-react';
 import { Navbar } from '@/components/navbar';
 import { PeerCard } from '@/components/peer-card';
 import { SendInvitationModal } from '@/components/send-invitation-modal';
-import { MOCK_PEERS } from '@/lib/demo-store';
 import { UserProfile, InterviewFormat } from '@/types';
+import { useAuth } from '@/components/auth-context';
+import { getCachedPeers } from '@/app/actions/peers';
+import { createClient } from '@/lib/supabase/client';
+
+function calculateMatchScore(currentUser: UserProfile | null | undefined, peer: UserProfile): number {
+  if (!currentUser) return Math.floor(Math.random() * 40) + 40; // Fallback for unauthenticated
+  
+  let score = 50; // Base score
+  
+  // High weight for matching role
+  if (currentUser.targetRole === peer.targetRole) score += 25;
+  
+  // Moderate weight for overlapping formats
+  const sharedFormats = currentUser.formats.filter(f => peer.formats.includes(f));
+  if (sharedFormats.length > 0) score += 15;
+  
+  // Experience level bonus
+  if (currentUser.experienceLevel === peer.experienceLevel) score += 10;
+  
+  return Math.min(score, 99);
+}
 
 export default function DiscoverPage() {
+  const { user } = useAuth();
+  const [currentUserProfile, setCurrentUserProfile] = useState<UserProfile | null>(null);
+  const [peers, setPeers] = useState<UserProfile[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFormatFilter, setSelectedFormatFilter] = useState<string>('ALL');
   const [selectedExpFilter, setSelectedExpFilter] = useState<string>('ALL');
   const [selectedPeerForInvite, setSelectedPeerForInvite] = useState<UserProfile | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const filteredPeers = MOCK_PEERS.filter((peer) => {
+  useEffect(() => {
+    async function loadPeers() {
+      try {
+        const data = await getCachedPeers();
+        setPeers(data);
+      } catch (error) {
+        console.error("Failed to fetch peers:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    async function loadUserProfile() {
+      if (user) {
+        const supabase = createClient();
+        const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+        if (data) {
+          // Map snake_case to camelCase
+          setCurrentUserProfile({
+            ...data,
+            targetRole: data.target_role,
+            experienceLevel: data.experience_level,
+            verifiedInterviewCount: data.verified_interview_count,
+            leaderboardOptIn: data.leaderboard_opt_in
+          } as UserProfile);
+        }
+      }
+    }
+
+    loadPeers();
+    loadUserProfile();
+  }, [user]);
+
+  const filteredPeers = peers.filter((peer) => {
     const matchesSearch =
       peer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       peer.targetRole.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -41,9 +98,9 @@ export default function DiscoverPage() {
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Toast Alert */}
         {toastMessage && (
-          <div className="mb-6 p-4 rounded-xl bg-teal-500/20 border border-teal-500/40 text-teal-200 text-sm font-semibold flex items-center justify-between animate-fadeIn">
+          <div className="mb-6 p-4 rounded-xl bg-sandow-500/20 border border-sandow-500/40 text-sandow-300 text-sm font-semibold flex items-center justify-between animate-fadeIn">
             <span>{toastMessage}</span>
-            <button onClick={() => setToastMessage(null)} className="text-xs text-teal-400 underline">Dismiss</button>
+            <button onClick={() => setToastMessage(null)} className="text-xs text-sandow-400 underline">Dismiss</button>
           </div>
         )}
 
@@ -52,7 +109,7 @@ export default function DiscoverPage() {
           <div>
             <h1 className="text-3xl font-extrabold text-white flex items-center gap-3">
               <span>Discover Practice Peers</span>
-              <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30">
+              <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-sandow-500/20 text-sandow-400 border border-sandow-500/30">
                 {filteredPeers.length} Available
               </span>
             </h1>
@@ -73,7 +130,7 @@ export default function DiscoverPage() {
                 placeholder="Search by role (e.g. Full Stack, Staff Engineer, PM), skills, or bio..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-teal-400"
+                className="w-full pl-10 pr-4 py-3 rounded-[1rem] bg-black/40 border border-white/5 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-sandow-500"
               />
             </div>
 
@@ -81,7 +138,7 @@ export default function DiscoverPage() {
             <select
               value={selectedFormatFilter}
               onChange={(e) => setSelectedFormatFilter(e.target.value)}
-              className="px-4 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700/80 text-white text-sm focus:outline-none"
+              className="px-4 py-3 rounded-[1rem] bg-black/40 border border-white/5 text-white text-sm focus:outline-none focus:border-sandow-500"
             >
               <option value="ALL">All Formats</option>
               <option value="System Design">System Design</option>
@@ -95,7 +152,7 @@ export default function DiscoverPage() {
             <select
               value={selectedExpFilter}
               onChange={(e) => setSelectedExpFilter(e.target.value)}
-              className="px-4 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700/80 text-white text-sm focus:outline-none"
+              className="px-4 py-3 rounded-[1rem] bg-black/40 border border-white/5 text-white text-sm focus:outline-none focus:border-sandow-500"
             >
               <option value="ALL">All Experience Levels</option>
               <option value="Entry-level">Entry-level (0-2 yrs)</option>
@@ -106,12 +163,17 @@ export default function DiscoverPage() {
         </div>
 
         {/* Peers Grid */}
-        {filteredPeers.length > 0 ? (
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <div className="w-8 h-8 border-4 border-sandow-500 border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : filteredPeers.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPeers.map((peer) => (
               <PeerCard
                 key={peer.id}
                 peer={peer}
+                matchScore={calculateMatchScore(currentUserProfile, peer)}
                 onInviteClick={(p) => setSelectedPeerForInvite(p)}
               />
             ))}
@@ -127,7 +189,7 @@ export default function DiscoverPage() {
                 setSelectedFormatFilter('ALL');
                 setSelectedExpFilter('ALL');
               }}
-              className="mt-4 px-4 py-2 rounded-xl bg-slate-800 text-xs font-semibold text-teal-300 hover:bg-slate-700 transition"
+              className="mt-4 px-6 py-2.5 rounded-full bg-black/40 text-xs font-semibold text-sandow-400 hover:text-sandow-300 hover:bg-black/60 transition border border-white/5"
             >
               Reset All Filters
             </button>

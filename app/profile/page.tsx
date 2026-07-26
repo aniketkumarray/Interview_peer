@@ -14,23 +14,100 @@ import {
   Lock
 } from 'lucide-react';
 import { Navbar } from '@/components/navbar';
-import { MOCK_CURRENT_USER, ALL_BADGES } from '@/lib/demo-store';
+import { ALL_BADGES } from '@/lib/demo-store';
 import { getMilestoneProgress } from '@/lib/gamification';
+import { useAuth } from '@/components/auth-context';
+import { createClient } from '@/lib/supabase/client';
+import { useRouter } from 'next/navigation';
+import { UserProfile } from '@/types';
 
 export default function ProfilePage() {
-  const [user, setUser] = useState(MOCK_CURRENT_USER);
-  const [leaderboardOptIn, setLeaderboardOptIn] = useState(user.leaderboardOptIn);
+  const router = useRouter();
+  const { user: authUser, loading: authLoading } = useAuth();
+  const supabase = createClient();
+
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [leaderboardOptIn, setLeaderboardOptIn] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    async function fetchProfile() {
+      if (authLoading) return;
+      if (!authUser) {
+        router.push('/login');
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
+
+      if (error || !data) {
+        router.push('/onboarding');
+      } else {
+        const profile: UserProfile = {
+          id: data.id,
+          name: data.name,
+          email: data.email,
+          avatarUrl: data.avatar_url,
+          targetRole: data.target_role,
+          industry: data.industry,
+          experienceLevel: data.experience_level,
+          timezone: data.timezone,
+          bio: data.bio,
+          formats: [], // Will need another query if formats are strictly needed here
+          availability: [],
+          verifiedInterviewCount: data.verified_interview_count,
+          leaderboardOptIn: data.leaderboard_opt_in,
+          languages: data.languages || ['English'],
+          createdAt: data.created_at,
+        };
+        setUser(profile);
+        setLeaderboardOptIn(data.leaderboard_opt_in);
+      }
+      setLoading(false);
+    }
+    fetchProfile();
+  }, [authUser, authLoading, router, supabase]);
+
+  const handleToggleOptIn = async () => {
+    if (!user) return;
+    const nextState = !leaderboardOptIn;
+    
+    // Optimistic UI update
+    setLeaderboardOptIn(nextState);
+    
+    // Save to DB
+    const { error } = await supabase
+      .from('profiles')
+      .update({ leaderboard_opt_in: nextState })
+      .eq('id', user.id);
+      
+    if (!error) {
+      setToastMessage(nextState ? 'Opted into Weekly Leaderboard!' : 'Opted out of Weekly Leaderboard.');
+    } else {
+      setLeaderboardOptIn(!nextState); // Revert
+      setToastMessage('Failed to update preference.');
+    }
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  if (loading || authLoading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center">
+        <div className="w-10 h-10 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 text-slate-400 font-medium">Loading profile...</p>
+      </div>
+    );
+  }
+
+  if (!user) return null; // Will redirect in useEffect
 
   const { currentBadge, nextBadge, progressPercent } = getMilestoneProgress(user.verifiedInterviewCount);
   const unlockedBadges = ALL_BADGES.filter((b) => user.verifiedInterviewCount >= b.countRequired);
-
-  const handleToggleOptIn = () => {
-    const nextState = !leaderboardOptIn;
-    setLeaderboardOptIn(nextState);
-    setToastMessage(nextState ? 'Opted into Weekly Leaderboard!' : 'Opted out of Weekly Leaderboard.');
-    setTimeout(() => setToastMessage(null), 3000);
-  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">

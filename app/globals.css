@@ -4,11 +4,11 @@
 
 @layer base {
   :root {
-    --bg-main: #0b0f19;
-    --card-bg: rgba(17, 24, 39, 0.75);
-    --card-border: rgba(255, 255, 255, 0.08);
-    --accent-teal: #14b8a6;
-    --accent-violet: #8b5cf6;
+    --bg-main: #0a0a0a;
+    --card-bg: rgba(20, 20, 20, 0.85);
+    --card-border: rgba(255, 255, 255, 0.06);
+    --accent-primary: #FF6B00;
+    --accent-secondary: #FF8533;
   }
 
   body {
@@ -20,21 +20,21 @@
 }
 
 .glass-panel {
-  background: rgba(17, 24, 39, 0.75);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(20, 20, 20, 0.85);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .glass-card {
-  background: linear-gradient(135deg, rgba(31, 41, 55, 0.6) 0%, rgba(17, 24, 39, 0.8) 100%);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(135deg, rgba(30, 30, 30, 0.6) 0%, rgba(20, 20, 20, 0.9) 100%);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   transition: all 0.2s ease-in-out;
 }
 
 .glass-card:hover {
-  border-color: rgba(139, 92, 246, 0.3);
-  box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.1);
+  border-color: rgba(255, 107, 0, 0.4);
+  box-shadow: 0 10px 25px -5px rgba(255, 107, 0, 0.15);
 }
 
 /* Custom scrollbars */
@@ -53,5 +53,5 @@
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(139, 92, 246, 0.4);
+  background: rgba(255, 107, 0, 0.5);
 }

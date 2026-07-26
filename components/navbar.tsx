@@ -16,6 +16,7 @@ import {
   LogOut,
   ChevronDown,
 } from 'lucide-react';
+import { NotificationsPopover } from '@/components/notifications-popover';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -47,17 +48,17 @@ export function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Brand Logo */}
           <Link href="/" className="flex items-center space-x-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 via-indigo-500 to-teal-400 p-0.5 shadow-lg shadow-violet-500/20 group-hover:scale-105 transition-transform">
-              <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-                <Users className="w-5 h-5 text-teal-400" />
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sandow-600 via-sandow-500 to-amber-500 p-0.5 shadow-[0_0_15px_rgba(255,107,0,0.4)] group-hover:scale-105 transition-transform">
+              <div className="w-full h-full bg-black rounded-[14px] flex items-center justify-center">
+                <Users className="w-5 h-5 text-sandow-400" />
               </div>
             </div>
             <div>
-              <div className="flex items-center space-x-1.5">
-                <span className="font-bold text-lg bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400">
-                  PeerMock
+              <div className="flex items-center space-x-2">
+                <span className="font-black text-xl tracking-tight text-white">
+                  SandowPeer
                 </span>
-                <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-300 font-semibold border border-violet-500/30">
+                <span className="text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-sandow-500/20 text-sandow-400 font-bold border border-sandow-500/40">
                   MVP
                 </span>
               </div>
@@ -76,13 +77,13 @@ export function Navbar() {
                   key={item.href}
                   href={item.href}
                   onClick={(e) => handleNavClick(e, item)}
-                  className={`flex items-center space-x-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-bold transition-all ${
                     isActive
-                      ? 'bg-gradient-to-r from-violet-600/30 to-indigo-600/30 text-white border border-violet-500/40 shadow-sm'
-                      : 'text-slate-300 hover:text-white hover:bg-white/5'
+                      ? 'bg-sandow-500/10 text-sandow-400 border border-sandow-500/20 shadow-sm'
+                      : 'text-slate-400 hover:text-white hover:bg-white/5'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-teal-400' : 'text-slate-400'}`} />
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-sandow-400' : 'text-slate-500'}`} />
                   <span>{item.label}</span>
                   {item.requiresAuth && !user && (
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-400/60" title="Requires sign in" />
@@ -95,13 +96,14 @@ export function Navbar() {
           {/* Action CTAs / User Menu */}
           <div className="flex items-center space-x-3">
             {loading ? (
-              <div className="w-8 h-8 rounded-full bg-slate-800 animate-pulse" />
+              <div className="w-8 h-8 rounded-full bg-white/5 animate-pulse" />
             ) : user ? (
               /* Authenticated: User Dropdown */
-              <div className="relative">
+              <div className="flex items-center space-x-2 relative">
+                <NotificationsPopover />
                 <button
                   onClick={() => setShowDropdown(!showDropdown)}
-                  className="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition"
+                  className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 transition"
                 >
                   <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-teal-400 to-violet-500 flex items-center justify-center text-xs font-bold text-white">
                     {user.email?.charAt(0).toUpperCase() || 'U'}
@@ -162,9 +164,9 @@ export function Navbar() {
                 </Link>
                 <Link
                   href="/login?tab=signup"
-                  className="inline-flex items-center space-x-2 px-4 py-2 rounded-xl text-sm font-semibold bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-400 hover:to-emerald-400 text-slate-950 shadow-lg shadow-teal-500/20 transition-all hover:scale-[1.02]"
+                  className="inline-flex items-center space-x-2 px-6 py-2.5 rounded-full text-sm font-bold bg-sandow-500 hover:bg-sandow-400 text-white shadow-[0_0_20px_-5px_rgba(255,107,0,0.5)] transition-all hover:scale-[1.02]"
                 >
-                  <span>Sign Up Free</span>
+                  <span>Join Sandow</span>
                 </Link>
               </>
             )}

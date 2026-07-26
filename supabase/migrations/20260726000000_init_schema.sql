@@ -132,6 +132,10 @@ drop policy if exists "Users can update own profile" on public.profiles;
 create policy "Users can update own profile" 
   on public.profiles for update using (auth.uid() = id);
 
+drop policy if exists "Users can insert own profile" on public.profiles;
+create policy "Users can insert own profile" 
+  on public.profiles for insert with check (auth.uid() = id);
+
 -- Profile Interview Types & Availability
 drop policy if exists "Read public interview types" on public.profile_interview_types;
 create policy "Read public interview types"
@@ -140,6 +144,18 @@ create policy "Read public interview types"
 drop policy if exists "Read public availability" on public.availability_windows;
 create policy "Read public availability"
   on public.availability_windows for select using (auth.role() = 'authenticated');
+
+drop policy if exists "Users can manage own interview types" on public.profile_interview_types;
+create policy "Users can manage own interview types"
+  on public.profile_interview_types for all using (
+    profile_id = auth.uid()
+  );
+
+drop policy if exists "Users can manage own availability" on public.availability_windows;
+create policy "Users can manage own availability"
+  on public.availability_windows for all using (
+    profile_id = auth.uid()
+  );
 
 -- Invitations
 drop policy if exists "Users can access own invitations" on public.invitations;
