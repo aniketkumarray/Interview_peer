@@ -1,0 +1,242 @@
+import { UserProfile, Invitation, Session, Feedback, LeaderboardEntry, Badge } from '@/types';
+
+export const ALL_BADGES: Badge[] = [
+  { id: '1', title: 'First Mock', countRequired: 1, description: 'Completed your first reciprocal mock interview.', icon: '🌱' },
+  { id: '3', title: 'Momentum', countRequired: 3, description: 'Built practice momentum with 3 completed mocks.', icon: '⚡' },
+  { id: '5', title: 'Practice Regular', countRequired: 5, description: 'Consistent peer interviewer with 5 sessions.', icon: '🔥' },
+  { id: '10', title: 'Double Digits', countRequired: 10, description: 'Hit double digits with 10 verified mock interviews.', icon: '🎯' },
+  { id: '25', title: 'Peer Pro', countRequired: 25, description: 'A seasoned mock partner with 25 completed sessions.', icon: '🏆' },
+  { id: '50', title: 'Practice Champion', countRequired: 50, description: 'Community leader with 50 reciprocal interviews.', icon: '👑' },
+  { id: '100', title: 'Century Club', countRequired: 100, description: 'Elite tier with 100 verified mock interviews.', icon: '💎' },
+];
+
+export const MOCK_CURRENT_USER: UserProfile = {
+  id: 'usr_me',
+  email: 'alex.dev@example.com',
+  name: 'Alex Rivera',
+  avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
+  targetRole: 'Senior Full Stack Engineer',
+  industry: 'Technology / Fintech',
+  experienceLevel: 'Senior (6+ yrs)',
+  timezone: 'UTC-5 (EST)',
+  languages: ['English', 'Spanish'],
+  bio: 'Ex-Stripe engineer preparing for L6 System Design and Senior Frontend architecture interviews. Happy to give detailed feedback on coding & system design!',
+  formats: ['System Design', 'Coding', 'Behavioral'],
+  availability: [
+    { id: 'a1', dayOfWeek: 'Monday', startTime: '17:00', endTime: '20:00', timezone: 'UTC-5' },
+    { id: 'a2', dayOfWeek: 'Wednesday', startTime: '18:00', endTime: '21:00', timezone: 'UTC-5' },
+    { id: 'a3', dayOfWeek: 'Saturday', startTime: '10:00', endTime: '16:00', timezone: 'UTC-5' },
+  ],
+  verifiedInterviewCount: 4,
+  leaderboardOptIn: true,
+  createdAt: '2026-06-01T10:00:00Z',
+};
+
+export const MOCK_PEERS: UserProfile[] = [
+  {
+    id: 'usr_sarah',
+    email: 'sarah.chen@example.com',
+    name: 'Sarah Chen',
+    avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=250&q=80',
+    targetRole: 'Staff Software Engineer',
+    industry: 'Distributed Systems & Cloud',
+    experienceLevel: 'Senior (6+ yrs)',
+    timezone: 'UTC-8 (PST)',
+    languages: ['English', 'Mandarin'],
+    bio: 'Infrastructure tech lead preparing for Big Tech Staff loops. Focused on scalability, RPC design, and STAR behavioral stories.',
+    formats: ['System Design', 'Behavioral', 'Coding'],
+    availability: [
+      { id: 's1', dayOfWeek: 'Tuesday', startTime: '18:00', endTime: '21:00', timezone: 'UTC-8' },
+      { id: 's2', dayOfWeek: 'Thursday', startTime: '18:00', endTime: '21:00', timezone: 'UTC-8' },
+      { id: 's3', dayOfWeek: 'Sunday', startTime: '13:00', endTime: '17:00', timezone: 'UTC-8' },
+    ],
+    verifiedInterviewCount: 12,
+    leaderboardOptIn: true,
+    createdAt: '2026-05-15T08:00:00Z',
+  },
+  {
+    id: 'usr_marcus',
+    email: 'marcus.v@example.com',
+    name: 'Marcus Vance',
+    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=250&q=80',
+    targetRole: 'Senior Product Manager',
+    industry: 'E-commerce & SaaS',
+    experienceLevel: 'Mid-level (3-5 yrs)',
+    timezone: 'UTC-5 (EST)',
+    languages: ['English'],
+    bio: 'Product manager targeting L5 PM roles at Google & Meta. Looking for peer practice on Product Sense, Product Execution, and Leadership.',
+    formats: ['Product Management', 'Behavioral', 'Case Interview'],
+    availability: [
+      { id: 'm1', dayOfWeek: 'Monday', startTime: '19:00', endTime: '21:00', timezone: 'UTC-5' },
+      { id: 'm2', dayOfWeek: 'Friday', startTime: '17:00', endTime: '20:00', timezone: 'UTC-5' },
+    ],
+    verifiedInterviewCount: 8,
+    leaderboardOptIn: true,
+    createdAt: '2026-06-10T12:00:00Z',
+  },
+  {
+    id: 'usr_priya',
+    email: 'priya.sharma@example.com',
+    name: 'Priya Sharma',
+    avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=250&q=80',
+    targetRole: 'Backend Engineer (Java/Go)',
+    industry: 'Fintech & Payments',
+    experienceLevel: 'Entry-level (0-2 yrs)',
+    timezone: 'UTC+5.5 (IST)',
+    languages: ['English', 'Hindi'],
+    bio: 'Recent CS grad prepping for SDE-1 coding rounds and data structure problems. Love solving LeetCode Medium/Hard graphs & DP.',
+    formats: ['Coding', 'Behavioral'],
+    availability: [
+      { id: 'p1', dayOfWeek: 'Wednesday', startTime: '20:00', endTime: '23:00', timezone: 'UTC+5.5' },
+      { id: 'p2', dayOfWeek: 'Saturday', startTime: '15:00', endTime: '19:00', timezone: 'UTC+5.5' },
+    ],
+    verifiedInterviewCount: 5,
+    leaderboardOptIn: true,
+    createdAt: '2026-07-01T09:00:00Z',
+  },
+  {
+    id: 'usr_elena',
+    email: 'elena.rostova@example.com',
+    name: 'Elena Rostova',
+    avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=250&q=80',
+    targetRole: 'Management Consultant',
+    industry: 'Strategy & Healthcare',
+    experienceLevel: 'Mid-level (3-5 yrs)',
+    timezone: 'UTC+1 (CET)',
+    languages: ['English', 'German'],
+    bio: 'Prepping for McKinsey & BCG case interviews. Strong with market sizing, profitability trees, and synthesis.',
+    formats: ['Case Interview', 'Behavioral', 'HR & Culture'],
+    availability: [
+      { id: 'e1', dayOfWeek: 'Thursday', startTime: '18:00', endTime: '21:00', timezone: 'UTC+1' },
+      { id: 'e2', dayOfWeek: 'Sunday', startTime: '11:00', endTime: '15:00', timezone: 'UTC+1' },
+    ],
+    verifiedInterviewCount: 26,
+    leaderboardOptIn: true,
+    createdAt: '2026-04-20T14:00:00Z',
+  },
+];
+
+export const MOCK_INVITATIONS: Invitation[] = [
+  {
+    id: 'inv_1',
+    senderId: 'usr_sarah',
+    receiverId: 'usr_me',
+    senderName: 'Sarah Chen',
+    receiverName: 'Alex Rivera',
+    format: 'System Design',
+    durationMinutes: 45,
+    note: 'Hi Alex! I saw you are practicing System Design and EST. Let’s do a reciprocal mock on Distributed Rate Limiters or URL Shorteners?',
+    proposedSlots: [
+      '2026-07-28T19:00:00Z',
+      '2026-07-29T20:00:00Z',
+      '2026-07-30T18:00:00Z'
+    ],
+    status: 'pending',
+    createdAt: '2026-07-25T14:30:00Z'
+  },
+  {
+    id: 'inv_2',
+    senderId: 'usr_me',
+    receiverId: 'usr_marcus',
+    senderName: 'Alex Rivera',
+    receiverName: 'Marcus Vance',
+    format: 'Behavioral',
+    durationMinutes: 30,
+    note: 'Hey Marcus! Would love to swap behavioral STAR stories for 30 mins.',
+    proposedSlots: [
+      '2026-07-27T18:00:00Z',
+      '2026-07-28T18:00:00Z'
+    ],
+    status: 'countered',
+    selectedSlot: '2026-07-28T18:30:00Z',
+    createdAt: '2026-07-24T10:00:00Z'
+  }
+];
+
+export const MOCK_SESSIONS: Session[] = [
+  {
+    id: 'sess_101',
+    invitationId: 'inv_old_1',
+    user1Id: 'usr_me',
+    user2Id: 'usr_sarah',
+    partnerName: 'Sarah Chen',
+    partnerRole: 'Staff Software Engineer',
+    format: 'System Design',
+    durationMinutes: 45,
+    scheduledAt: '2026-07-27T19:00:00Z',
+    jitsiRoomUrl: 'https://meet.jit.si/mock-peer-sess_101-sd',
+    status: 'scheduled',
+    user1Confirmed: false,
+    user2Confirmed: false,
+    createdAt: '2026-07-23T11:00:00Z'
+  },
+  {
+    id: 'sess_100',
+    invitationId: 'inv_old_0',
+    user1Id: 'usr_me',
+    user2Id: 'usr_priya',
+    partnerName: 'Priya Sharma',
+    partnerRole: 'Backend Engineer',
+    format: 'Coding',
+    durationMinutes: 45,
+    scheduledAt: '2026-07-20T15:00:00Z',
+    jitsiRoomUrl: 'https://meet.jit.si/mock-peer-sess_100-alg',
+    status: 'completed',
+    user1Confirmed: true,
+    user2Confirmed: true,
+    createdAt: '2026-07-19T09:00:00Z'
+  }
+];
+
+export const MOCK_LEADERBOARD: LeaderboardEntry[] = [
+  {
+    rank: 1,
+    userId: 'usr_elena',
+    name: 'Elena Rostova',
+    avatarUrl: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=250&q=80',
+    targetRole: 'Management Consultant',
+    currentBadge: 'Peer Pro',
+    weeklyCount: 9,
+    uniquePartnersCount: 7,
+  },
+  {
+    rank: 2,
+    userId: 'usr_sarah',
+    name: 'Sarah Chen',
+    avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=250&q=80',
+    targetRole: 'Staff Software Engineer',
+    currentBadge: 'Double Digits',
+    weeklyCount: 7,
+    uniquePartnersCount: 6,
+  },
+  {
+    rank: 3,
+    userId: 'usr_marcus',
+    name: 'Marcus Vance',
+    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=250&q=80',
+    targetRole: 'Senior Product Manager',
+    currentBadge: 'Practice Regular',
+    weeklyCount: 5,
+    uniquePartnersCount: 5,
+  },
+  {
+    rank: 4,
+    userId: 'usr_priya',
+    name: 'Priya Sharma',
+    avatarUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=250&q=80',
+    targetRole: 'Backend Engineer',
+    currentBadge: 'Practice Regular',
+    weeklyCount: 4,
+    uniquePartnersCount: 4,
+  },
+  {
+    rank: 5,
+    userId: 'usr_me',
+    name: 'Alex Rivera (You)',
+    avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
+    targetRole: 'Senior Full Stack Engineer',
+    currentBadge: 'Momentum',
+    weeklyCount: 3,
+    uniquePartnersCount: 3,
+  },
+];
