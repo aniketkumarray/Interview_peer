@@ -15,6 +15,8 @@ import {
   LogIn,
   LogOut,
   ChevronDown,
+  Menu,
+  X,
 } from 'lucide-react';
 import { NotificationsPopover } from '@/components/notifications-popover';
 
@@ -23,6 +25,7 @@ export function Navbar() {
   const router = useRouter();
   const { user, loading, signOut } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Routes that require auth — clicking these when unauthenticated redirects to login
   const protectedRoutes = ['/invitations', '/sessions', '/profile', '/onboarding'];
@@ -32,7 +35,6 @@ export function Navbar() {
     { href: '/invitations', label: 'Invitations', icon: Calendar, requiresAuth: true },
     { href: '/sessions/demo', label: 'Sessions', icon: Video, requiresAuth: true },
     { href: '/leaderboard', label: 'Leaderboard', icon: Trophy, requiresAuth: false },
-    { href: '/profile', label: 'My Profile', icon: User, requiresAuth: true },
   ];
 
   const handleNavClick = (e: React.MouseEvent, item: typeof navItems[0]) => {
@@ -170,9 +172,53 @@ export function Navbar() {
                 </Link>
               </>
             )}
+            {/* Mobile Hamburger Toggle Button */}
+            <div className="flex md:hidden items-center ml-2">
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/10 transition border border-white/5"
+                aria-label="Toggle Navigation Menu"
+              >
+                {mobileMenuOpen ? <X className="w-6 h-6 text-sandow-400" /> : <Menu className="w-6 h-6 text-white" />}
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Mobile Navigation Collapsible Drawer */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-b border-white/10 bg-[#0A0A0A]/95 backdrop-blur-xl px-4 pt-3 pb-6 space-y-2 animate-fadeIn">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={(e) => {
+                  setMobileMenuOpen(false);
+                  handleNavClick(e, item);
+                }}
+                className={`flex items-center space-x-3 px-4 py-3 rounded-2xl text-base font-bold transition-all ${
+                  isActive
+                    ? 'bg-sandow-500/20 text-sandow-400 border border-sandow-500/30'
+                    : 'text-slate-300 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <Icon className={`w-5 h-5 ${isActive ? 'text-sandow-400' : 'text-slate-400'}`} />
+                <span>{item.label}</span>
+                {item.requiresAuth && !user && (
+                  <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 font-semibold border border-amber-400/30">
+                    Sign In
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </div>
+      )}
 
       {/* Click-away overlay for dropdown */}
       {showDropdown && (

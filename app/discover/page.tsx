@@ -19,7 +19,9 @@ function calculateMatchScore(currentUser: UserProfile | null | undefined, peer: 
   if (currentUser.targetRole === peer.targetRole) score += 25;
   
   // Moderate weight for overlapping formats
-  const sharedFormats = currentUser.formats.filter(f => peer.formats.includes(f));
+  const userFormats = currentUser.formats || [];
+  const peerFormats = peer.formats || [];
+  const sharedFormats = userFormats.filter(f => peerFormats.includes(f));
   if (sharedFormats.length > 0) score += 15;
   
   // Experience level bonus
