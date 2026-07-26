@@ -61,10 +61,10 @@ export default function LandingPage() {
               <ArrowRight className="w-4 h-4 ml-1" />
             </Link>
             <Link
-              href="/onboarding"
+              href="/login?tab=signup"
               className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-8 py-4 rounded-xl font-semibold text-white bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 shadow-lg transition-all"
             >
-              <span>Set Up My Profile</span>
+              <span>Sign Up Free</span>
             </Link>
           </div>
 

@@ -121,27 +121,33 @@ alter table public.feedback enable row level security;
 alter table public.blocks enable row level security;
 alter table public.reports enable row level security;
 
--- ROW LEVEL SECURITY (RLS) POLICIES
+-- ROW LEVEL SECURITY (RLS) POLICIES (With DROP IF EXISTS guards)
 
--- Profiles: Public read for authenticated users, self-update
+-- Profiles
+drop policy if exists "Public profiles are readable by authenticated users" on public.profiles;
 create policy "Public profiles are readable by authenticated users" 
   on public.profiles for select using (auth.role() = 'authenticated');
 
+drop policy if exists "Users can update own profile" on public.profiles;
 create policy "Users can update own profile" 
   on public.profiles for update using (auth.uid() = id);
 
 -- Profile Interview Types & Availability
+drop policy if exists "Read public interview types" on public.profile_interview_types;
 create policy "Read public interview types"
   on public.profile_interview_types for select using (auth.role() = 'authenticated');
 
+drop policy if exists "Read public availability" on public.availability_windows;
 create policy "Read public availability"
   on public.availability_windows for select using (auth.role() = 'authenticated');
 
--- Invitations: Only sender or receiver can access
+-- Invitations
+drop policy if exists "Users can access own invitations" on public.invitations;
 create policy "Users can access own invitations" 
   on public.invitations for all 
   using (auth.uid() = sender_id or auth.uid() = receiver_id);
 
+drop policy if exists "Users can access invitation time options" on public.invitation_time_options;
 create policy "Users can access invitation time options"
   on public.invitation_time_options for all
   using (
@@ -151,22 +157,27 @@ create policy "Users can access invitation time options"
     )
   );
 
--- Sessions: Only participants can access
+-- Sessions
+drop policy if exists "Participants can access sessions" on public.sessions;
 create policy "Participants can access sessions" 
   on public.sessions for all 
   using (auth.uid() = user1_id or auth.uid() = user2_id);
 
--- Feedback: Recipient can read, reviewer can insert
+-- Feedback
+drop policy if exists "Recipients can view feedback" on public.feedback;
 create policy "Recipients can view feedback" 
   on public.feedback for select using (auth.uid() = recipient_id or auth.uid() = reviewer_id);
 
+drop policy if exists "Reviewers can insert feedback" on public.feedback;
 create policy "Reviewers can insert feedback" 
   on public.feedback for insert with check (auth.uid() = reviewer_id);
 
 -- Blocks & Reports
+drop policy if exists "Users manage own blocks" on public.blocks;
 create policy "Users manage own blocks"
   on public.blocks for all using (auth.uid() = blocker_id);
 
+drop policy if exists "Users manage own reports" on public.reports;
 create policy "Users manage own reports"
   on public.reports for all using (auth.uid() = reporter_id);
 
