@@ -3,7 +3,7 @@ import './globals.css';
 import { AuthProvider } from '@/components/auth-context';
 
 export const metadata: Metadata = {
-  title: 'PeerMock — Reciprocal Mock Interview Marketplace',
+  title: 'PeerConnect — Reciprocal Mock Interview Marketplace',
   description: 'Find compatible practice partners, schedule 1-on-1 mock interviews, meet via private Jitsi video links, and build a verified practice streak.',
 };
 

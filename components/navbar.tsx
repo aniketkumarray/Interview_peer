@@ -58,13 +58,10 @@ export function Navbar() {
             <div>
               <div className="flex items-center space-x-2">
                 <span className="font-black text-xl tracking-tight text-white">
-                  SandowPeer
-                </span>
-                <span className="text-[9px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-sandow-500/20 text-sandow-400 font-bold border border-sandow-500/40">
-                  MVP
+                  PeerConnect
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 -mt-1 hidden sm:block">Reciprocal Practice Marketplace</p>
+              <p className="text-[11px] text-slate-400 -mt-0.5 hidden sm:block">Reciprocal Practice Marketplace</p>
             </div>
           </Link>
 
@@ -168,7 +165,7 @@ export function Navbar() {
                   href="/login?tab=signup"
                   className="inline-flex items-center space-x-2 px-6 py-2.5 rounded-full text-sm font-bold bg-sandow-500 hover:bg-sandow-400 text-white shadow-[0_0_20px_-5px_rgba(255,107,0,0.5)] transition-all hover:scale-[1.02]"
                 >
-                  <span>Join Sandow</span>
+                  <span>Sign Up</span>
                 </Link>
               </>
             )}

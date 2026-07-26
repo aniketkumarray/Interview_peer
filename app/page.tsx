@@ -168,7 +168,7 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="mt-auto border-t border-white/10 bg-slate-950 py-8 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4">
-          <p>© 2026 PeerMock — Reciprocal Mock Interview Marketplace. Built with Next.js & Supabase.</p>
+          <p>© 2026 PeerConnect — Reciprocal Mock Interview Marketplace. Built with Next.js & Supabase.</p>
         </div>
       </footer>
     </div>

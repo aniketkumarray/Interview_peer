@@ -172,22 +172,21 @@ function LoginPageContent() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col relative overflow-hidden">
+    <div className="min-h-screen bg-[#0A0A0A] text-slate-100 flex flex-col relative overflow-hidden">
       {/* Background Gradients */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-gradient-to-tr from-violet-600/15 via-teal-500/15 to-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-teal-500/8 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-10 left-10 w-64 h-64 bg-violet-500/8 rounded-full blur-2xl pointer-events-none" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-gradient-to-tr from-sandow-600/20 via-sandow-500/10 to-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-sandow-500/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Header */}
       <header className="relative z-10 p-6">
         <Link href="/" className="flex items-center space-x-3 group w-fit">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 via-indigo-500 to-teal-400 p-0.5 shadow-lg shadow-violet-500/20 group-hover:scale-105 transition-transform">
-            <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-              <Users className="w-5 h-5 text-teal-400" />
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sandow-600 via-sandow-500 to-amber-500 p-0.5 shadow-[0_0_15px_rgba(255,107,0,0.4)] group-hover:scale-105 transition-transform">
+            <div className="w-full h-full bg-black rounded-[14px] flex items-center justify-center">
+              <Users className="w-5 h-5 text-sandow-400" />
             </div>
           </div>
-          <span className="font-bold text-lg bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400">
-            PeerMock
+          <span className="font-black text-xl tracking-tight text-white">
+            PeerConnect
           </span>
         </Link>
       </header>
@@ -196,7 +195,7 @@ function LoginPageContent() {
       <main className="flex-1 flex items-center justify-center px-4 py-8 relative z-10">
         <div className="w-full max-w-md">
           {/* Auth Card */}
-          <div className="glass-panel rounded-2xl border border-white/10 p-8 shadow-2xl">
+          <div className="glass-panel rounded-[2rem] border border-white/10 p-8 shadow-2xl bg-white/5">
             {/* Title */}
             <div className="text-center mb-8">
               <h1 className="text-2xl font-extrabold text-white">
@@ -210,23 +209,23 @@ function LoginPageContent() {
             </div>
 
             {/* Tab Switcher */}
-            <div className="flex bg-slate-900/80 rounded-xl p-1 mb-6 border border-slate-800/80">
+            <div className="flex bg-black/60 rounded-full p-1 mb-6 border border-white/10">
               <button
                 onClick={() => { setActiveTab('signin'); setError(null); setSuccess(null); }}
-                className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                className={`flex-1 py-2.5 rounded-full text-xs font-bold transition-all ${
                   activeTab === 'signin'
-                    ? 'bg-gradient-to-r from-violet-600/40 to-indigo-600/40 text-white border border-violet-500/40 shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-sandow-500 text-white shadow-[0_0_15px_rgba(255,107,0,0.4)]'
+                    : 'text-slate-400 hover:text-white'
                 }`}
               >
                 Sign In
               </button>
               <button
                 onClick={() => { setActiveTab('signup'); setError(null); setSuccess(null); }}
-                className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                className={`flex-1 py-2.5 rounded-full text-xs font-bold transition-all ${
                   activeTab === 'signup'
-                    ? 'bg-gradient-to-r from-teal-600/40 to-emerald-600/40 text-white border border-teal-500/40 shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-sandow-500 text-white shadow-[0_0_15px_rgba(255,107,0,0.4)]'
+                    : 'text-slate-400 hover:text-white'
                 }`}
               >
                 Sign Up
@@ -235,7 +234,7 @@ function LoginPageContent() {
 
             {/* Error Alert */}
             {error && (
-              <div className="mb-4 p-3 rounded-xl bg-red-500/15 border border-red-500/30 text-red-300 text-xs font-medium flex items-start space-x-2 animate-fadeIn">
+              <div className="mb-4 p-3.5 rounded-2xl bg-red-500/15 border border-red-500/30 text-red-300 text-xs font-medium flex items-start space-x-2 animate-fadeIn">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
@@ -243,7 +242,7 @@ function LoginPageContent() {
 
             {/* Success Alert */}
             {success && (
-              <div className="mb-4 p-3 rounded-xl bg-teal-500/15 border border-teal-500/30 text-teal-300 text-xs font-medium flex items-start space-x-2 animate-fadeIn">
+              <div className="mb-4 p-3.5 rounded-2xl bg-sandow-500/15 border border-sandow-500/30 text-sandow-300 text-xs font-medium flex items-start space-x-2 animate-fadeIn">
                 <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
                 <span>{success}</span>
               </div>
@@ -253,7 +252,7 @@ function LoginPageContent() {
             <form onSubmit={activeTab === 'signin' ? handleSignIn : handleSignUp} className="space-y-4">
               {/* Email */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
                   Email Address
                 </label>
                 <div className="relative">
@@ -264,14 +263,14 @@ function LoginPageContent() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
                     required
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-teal-400 transition"
+                    className="w-full pl-10 pr-4 py-3 rounded-2xl bg-black/60 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-sandow-500 transition"
                   />
                 </div>
               </div>
 
               {/* Password */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
                   Password
                 </label>
                 <div className="relative">
@@ -283,7 +282,7 @@ function LoginPageContent() {
                     placeholder="••••••••"
                     required
                     minLength={6}
-                    className="w-full pl-10 pr-12 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-teal-400 transition"
+                    className="w-full pl-10 pr-12 py-3 rounded-2xl bg-black/60 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-sandow-500 transition"
                   />
                   <button
                     type="button"
@@ -298,7 +297,7 @@ function LoginPageContent() {
               {/* Confirm Password (signup only) */}
               {activeTab === 'signup' && (
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">
+                  <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
                     Confirm Password
                   </label>
                   <div className="relative">
@@ -310,7 +309,7 @@ function LoginPageContent() {
                       placeholder="••••••••"
                       required
                       minLength={6}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/90 border border-slate-700/80 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-teal-400 transition"
+                      className="w-full pl-10 pr-4 py-3 rounded-2xl bg-black/60 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-sandow-500 transition"
                     />
                   </div>
                 </div>
@@ -322,7 +321,7 @@ function LoginPageContent() {
                   <button
                     type="button"
                     onClick={handleForgotPassword}
-                    className="text-xs text-teal-400 hover:text-teal-300 font-medium transition"
+                    className="text-xs text-sandow-400 hover:text-sandow-300 font-bold transition"
                   >
                     Forgot password?
                   </button>
@@ -333,12 +332,10 @@ function LoginPageContent() {
               <button
                 type="submit"
                 disabled={loading}
-                className={`w-full flex items-center justify-center space-x-2 px-6 py-3 rounded-xl font-bold text-sm transition-all ${
+                className={`w-full flex items-center justify-center space-x-2 px-6 py-3.5 rounded-full font-bold text-sm transition-all ${
                   loading
-                    ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
-                    : activeTab === 'signin'
-                    ? 'bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-400 hover:to-indigo-400 text-white shadow-lg shadow-violet-500/20 hover:scale-[1.02]'
-                    : 'bg-gradient-to-r from-teal-400 via-emerald-400 to-teal-300 hover:from-teal-300 hover:to-emerald-300 text-slate-950 shadow-lg shadow-teal-500/25 hover:scale-[1.02]'
+                    ? 'bg-white/10 text-slate-500 cursor-not-allowed'
+                    : 'bg-sandow-500 hover:bg-sandow-400 text-white shadow-[0_0_20px_-5px_rgba(255,107,0,0.5)] hover:scale-[1.01]'
                 }`}
               >
                 {loading ? (
@@ -359,7 +356,7 @@ function LoginPageContent() {
                   Don&apos;t have an account?{' '}
                   <button
                     onClick={() => { setActiveTab('signup'); setError(null); setSuccess(null); }}
-                    className="text-teal-400 hover:text-teal-300 font-semibold transition"
+                    className="text-sandow-400 hover:text-sandow-300 font-bold transition"
                   >
                     Sign up free
                   </button>
@@ -369,7 +366,7 @@ function LoginPageContent() {
                   Already have an account?{' '}
                   <button
                     onClick={() => { setActiveTab('signin'); setError(null); setSuccess(null); }}
-                    className="text-violet-400 hover:text-violet-300 font-semibold transition"
+                    className="text-sandow-400 hover:text-sandow-300 font-bold transition"
                   >
                     Sign in
                   </button>
@@ -387,7 +384,7 @@ function LoginPageContent() {
             ].map((item, i) => (
               <div key={i} className="flex flex-col items-center space-y-1.5 text-slate-500">
                 <item.icon className="w-4 h-4" />
-                <span className="text-[10px] font-medium uppercase tracking-wider">{item.label}</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider">{item.label}</span>
               </div>
             ))}
           </div>
