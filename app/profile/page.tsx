@@ -24,7 +24,7 @@ import { getMilestoneProgress } from '@/lib/gamification';
 import { useAuth } from '@/components/auth-context';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-import { UserProfile } from '@/types';
+import { UserProfile, ExperienceLevel } from '@/types';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -146,7 +146,7 @@ export default function ProfilePage() {
         ...prev,
         name: editForm.name,
         targetRole: editForm.targetRole,
-        experienceLevel: editForm.experienceLevel,
+        experienceLevel: editForm.experienceLevel as ExperienceLevel,
         timezone: editForm.timezone,
         bio: editForm.bio,
         avatarUrl: editForm.avatarUrl
