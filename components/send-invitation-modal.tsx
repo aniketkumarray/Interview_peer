@@ -7,7 +7,13 @@ import { UserProfile, InterviewFormat } from '@/types';
 interface SendInvitationModalProps {
   peer: UserProfile | null;
   onClose: () => void;
-  onSend: (invitationData: any) => void;
+  onSend: (invitationData: {
+    receiverId: string;
+    format: string;
+    durationMinutes: number;
+    note: string;
+    proposedSlots: string[];
+  }) => void;
 }
 
 export function SendInvitationModal({ peer, onClose, onSend }: SendInvitationModalProps) {
@@ -23,7 +29,7 @@ export function SendInvitationModal({ peer, onClose, onSend }: SendInvitationMod
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSend({
-      peerId: peer.id,
+      receiverId: peer.id,
       format: selectedFormat,
       durationMinutes: duration,
       note,
