@@ -110,11 +110,18 @@ create table if not exists public.reports (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- ROW LEVEL SECURITY (RLS) POLICIES
+-- ENABLE ROW LEVEL SECURITY (RLS) ON ALL TABLES
 alter table public.profiles enable row level security;
+alter table public.profile_interview_types enable row level security;
+alter table public.availability_windows enable row level security;
 alter table public.invitations enable row level security;
+alter table public.invitation_time_options enable row level security;
 alter table public.sessions enable row level security;
 alter table public.feedback enable row level security;
+alter table public.blocks enable row level security;
+alter table public.reports enable row level security;
+
+-- ROW LEVEL SECURITY (RLS) POLICIES
 
 -- Profiles: Public read for authenticated users, self-update
 create policy "Public profiles are readable by authenticated users" 
@@ -123,10 +130,26 @@ create policy "Public profiles are readable by authenticated users"
 create policy "Users can update own profile" 
   on public.profiles for update using (auth.uid() = id);
 
+-- Profile Interview Types & Availability
+create policy "Read public interview types"
+  on public.profile_interview_types for select using (auth.role() = 'authenticated');
+
+create policy "Read public availability"
+  on public.availability_windows for select using (auth.role() = 'authenticated');
+
 -- Invitations: Only sender or receiver can access
 create policy "Users can access own invitations" 
   on public.invitations for all 
   using (auth.uid() = sender_id or auth.uid() = receiver_id);
+
+create policy "Users can access invitation time options"
+  on public.invitation_time_options for all
+  using (
+    exists (
+      select 1 from public.invitations 
+      where id = invitation_id and (sender_id = auth.uid() or receiver_id = auth.uid())
+    )
+  );
 
 -- Sessions: Only participants can access
 create policy "Participants can access sessions" 
@@ -139,6 +162,13 @@ create policy "Recipients can view feedback"
 
 create policy "Reviewers can insert feedback" 
   on public.feedback for insert with check (auth.uid() = reviewer_id);
+
+-- Blocks & Reports
+create policy "Users manage own blocks"
+  on public.blocks for all using (auth.uid() = blocker_id);
+
+create policy "Users manage own reports"
+  on public.reports for all using (auth.uid() = reporter_id);
 
 -- ATOMIC SESSION COMPLETION RPC FUNCTION
 create or replace function public.confirm_session_completion(
@@ -153,7 +183,6 @@ declare
   v_other_user_id uuid;
   v_other_confirmed boolean;
   v_already_confirmed_today boolean;
-  v_updated_count integer;
 begin
   select * into v_session from public.sessions where id = p_session_id;
   
