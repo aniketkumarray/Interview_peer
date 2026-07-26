@@ -8,6 +8,7 @@ import { SendInvitationModal } from '@/components/send-invitation-modal';
 import { UserProfile, InterviewFormat } from '@/types';
 import { useAuth } from '@/components/auth-context';
 import { getCachedPeers } from '@/app/actions/peers';
+import { sendInvitation } from '@/app/actions/invitations';
 import { createClient } from '@/lib/supabase/client';
 
 function calculateMatchScore(currentUser: UserProfile | null | undefined, peer: UserProfile): number {
@@ -131,9 +132,18 @@ export default function DiscoverPage() {
       return matchesSearch && matchesFormat && matchesExp;
     });
 
-  const handleSendInvitation = (data: any) => {
-    setToastMessage(`Invitation successfully sent! Check your Outgoing Invitations tab.`);
-    setTimeout(() => setToastMessage(null), 4000);
+  const handleSendInvitation = async (data: any) => {
+    try {
+      setLoading(true);
+      await sendInvitation(data);
+      setToastMessage(`Invitation successfully sent! Check your Outgoing Invitations tab.`);
+      setTimeout(() => setToastMessage(null), 4000);
+    } catch (error: any) {
+      console.error(error);
+      alert('Failed to send invitation: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

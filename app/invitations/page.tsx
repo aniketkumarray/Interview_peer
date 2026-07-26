@@ -1,54 +1,75 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Calendar, Inbox, Send, History, CheckCircle2 } from 'lucide-react';
+import { Calendar, Inbox, Send, History, CheckCircle2, Loader2 } from 'lucide-react';
 import { Navbar } from '@/components/navbar';
 import { InvitationCard } from '@/components/invitation-card';
 import { CounterOfferModal } from '@/components/counter-offer-modal';
-import { MOCK_INVITATIONS } from '@/lib/demo-store';
 import { Invitation } from '@/types';
+import { getInvitations, updateInvitationStatus } from '@/app/actions/invitations';
 
 export default function InvitationsPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'incoming' | 'outgoing' | 'history'>('incoming');
-  const [invitations, setInvitations] = useState<Invitation[]>(MOCK_INVITATIONS);
+  const [invitations, setInvitations] = useState<Invitation[]>([]);
+  const [loading, setLoading] = useState(true);
   const [counterTarget, setCounterTarget] = useState<Invitation | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const incomingList = invitations.filter((inv) => inv.receiverId === 'usr_me');
-  const outgoingList = invitations.filter((inv) => inv.senderId === 'usr_me');
+  const loadInvitations = async () => {
+    try {
+      setLoading(true);
+      const data = await getInvitations();
+      setInvitations(data as any);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadInvitations();
+  }, []);
+
+  const incomingList = invitations.filter((inv) => inv.receiverId === 'usr_me' && inv.status !== 'accepted' && inv.status !== 'declined');
+  const outgoingList = invitations.filter((inv) => inv.senderId === 'usr_me' && inv.status !== 'accepted' && inv.status !== 'declined');
   const historyList = invitations.filter((inv) => inv.status === 'accepted' || inv.status === 'declined');
 
-  const handleAccept = (invitation: Invitation, selectedSlot: string) => {
-    // Mark as accepted and redirect to newly scheduled session
-    const updated = invitations.map((inv) =>
-      inv.id === invitation.id ? { ...inv, status: 'accepted' as const, selectedSlot } : inv
-    );
-    setInvitations(updated);
-    setToastMessage(`Invitation accepted! Dynamic Jitsi meeting room created.`);
-
-    setTimeout(() => {
-      router.push('/sessions/sess_101');
-    }, 1500);
+  const handleAccept = async (invitation: Invitation, selectedSlot: string) => {
+    try {
+      const res = await updateInvitationStatus(invitation.id, 'accepted', { selectedSlot });
+      setToastMessage(`Invitation accepted! Dynamic Jitsi meeting room created.`);
+      await loadInvitations();
+      setTimeout(() => {
+        router.push(`/sessions/${res.sessionId}`);
+      }, 1500);
+    } catch (e: any) {
+      alert(e.message);
+    }
   };
 
-  const handleCounterSubmit = (invitationId: string, newSlots: string[], note: string) => {
-    const updated = invitations.map((inv) =>
-      inv.id === invitationId ? { ...inv, status: 'countered' as const, proposedSlots: newSlots, note } : inv
-    );
-    setInvitations(updated);
-    setToastMessage(`Counter-offer submitted to ${counterTarget?.senderName}!`);
-    setTimeout(() => setToastMessage(null), 4000);
+  const handleCounterSubmit = async (invitationId: string, newSlots: string[], note: string) => {
+    try {
+      await updateInvitationStatus(invitationId, 'countered', { proposedSlots: newSlots, note });
+      setToastMessage(`Counter-offer submitted to ${counterTarget?.senderName}!`);
+      setTimeout(() => setToastMessage(null), 4000);
+      await loadInvitations();
+    } catch (e: any) {
+      alert(e.message);
+    }
   };
 
-  const handleDecline = (invitationId: string) => {
-    const updated = invitations.map((inv) =>
-      inv.id === invitationId ? { ...inv, status: 'declined' as const } : inv
-    );
-    setInvitations(updated);
-    setToastMessage(`Invitation declined.`);
-    setTimeout(() => setToastMessage(null), 3000);
+  const handleDecline = async (invitationId: string) => {
+    try {
+      await updateInvitationStatus(invitationId, 'declined');
+      setToastMessage(`Invitation declined.`);
+      setTimeout(() => setToastMessage(null), 3000);
+      await loadInvitations();
+    } catch (e: any) {
+      alert(e.message);
+    }
   };
 
   return (
@@ -117,34 +138,58 @@ export default function InvitationsPage() {
         </div>
 
         {/* Tab Content */}
-        {activeTab === 'incoming' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {incomingList.map((inv) => (
-              <InvitationCard
-                key={inv.id}
-                invitation={inv}
-                type="incoming"
-                onAccept={handleAccept}
-                onCounter={(i) => setCounterTarget(i)}
-                onDecline={handleDecline}
-              />
-            ))}
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+            <Loader2 className="w-8 h-8 animate-spin mb-4 text-sandow-500" />
+            <p>Loading invitations...</p>
           </div>
-        )}
+        ) : (
+          <div className="space-y-4">
+            {activeTab === 'incoming' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {incomingList.length > 0 ? incomingList.map((inv) => (
+                  <InvitationCard
+                    key={inv.id}
+                    invitation={inv}
+                    type="incoming"
+                    onAccept={handleAccept}
+                    onCounter={(i) => setCounterTarget(i)}
+                    onDecline={handleDecline}
+                  />
+                )) : (
+                  <div className="col-span-full py-12 text-center text-slate-400">
+                    <Inbox className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                    <p>No incoming invitations.</p>
+                  </div>
+                )}
+              </div>
+            )}
 
-        {activeTab === 'outgoing' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {outgoingList.map((inv) => (
-              <InvitationCard key={inv.id} invitation={inv} type="outgoing" />
-            ))}
-          </div>
-        )}
+            {activeTab === 'outgoing' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {outgoingList.length > 0 ? outgoingList.map((inv) => (
+                  <InvitationCard key={inv.id} invitation={inv} type="outgoing" />
+                )) : (
+                  <div className="col-span-full py-12 text-center text-slate-400">
+                    <Send className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                    <p>No outgoing invitations.</p>
+                  </div>
+                )}
+              </div>
+            )}
 
-        {activeTab === 'history' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {historyList.map((inv) => (
-              <InvitationCard key={inv.id} invitation={inv} type="history" />
-            ))}
+            {activeTab === 'history' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {historyList.length > 0 ? historyList.map((inv) => (
+                  <InvitationCard key={inv.id} invitation={inv} type="history" />
+                )) : (
+                  <div className="col-span-full py-12 text-center text-slate-400">
+                    <History className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                    <p>No invitation history.</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -152,7 +197,10 @@ export default function InvitationsPage() {
         <CounterOfferModal
           invitation={counterTarget}
           onClose={() => setCounterTarget(null)}
-          onSubmit={handleCounterSubmit}
+          onSubmit={(invitationId, slots, note) => {
+            handleCounterSubmit(invitationId, slots, note);
+            setCounterTarget(null);
+          }}
         />
       </main>
     </div>

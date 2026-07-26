@@ -33,7 +33,7 @@ export function Navbar() {
   const navItems = [
     { href: '/discover', label: 'Discover Peers', icon: Compass, requiresAuth: false },
     { href: '/invitations', label: 'Invitations', icon: Calendar, requiresAuth: true },
-    { href: '/sessions/demo', label: 'Sessions', icon: Video, requiresAuth: true },
+    { href: '/sessions', label: 'Sessions', icon: Video, requiresAuth: true },
     { href: '/leaderboard', label: 'Leaderboard', icon: Trophy, requiresAuth: false },
   ];
 
@@ -163,7 +163,7 @@ export function Navbar() {
                 </Link>
                 <Link
                   href="/login?tab=signup"
-                  className="inline-flex items-center space-x-2 px-6 py-2.5 rounded-full text-sm font-bold bg-sandow-500 hover:bg-sandow-400 text-white shadow-[0_0_20px_-5px_rgba(255,107,0,0.5)] transition-all hover:scale-[1.02]"
+                  className="inline-flex items-center space-x-2 px-4 sm:px-6 py-2 sm:py-2.5 rounded-full text-sm font-bold bg-sandow-500 hover:bg-sandow-400 text-white shadow-[0_0_20px_-5px_rgba(255,107,0,0.5)] transition-all hover:scale-[1.02] whitespace-nowrap"
                 >
                   <span>Sign Up</span>
                 </Link>
@@ -214,6 +214,20 @@ export function Navbar() {
               </Link>
             );
           })}
+          
+          {/* Mobile Auth Buttons */}
+          {!user && (
+            <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-white/10">
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex items-center justify-center space-x-2 px-4 py-3 rounded-xl text-sm font-bold text-slate-300 hover:text-white hover:bg-white/5 transition border border-white/10"
+              >
+                <LogIn className="w-4 h-4" />
+                <span>Sign In</span>
+              </Link>
+            </div>
+          )}
         </div>
       )}
 
