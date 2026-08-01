@@ -86,15 +86,17 @@ export async function getInvitations() {
     
     return {
       id: inv.id,
-      senderId: isIncoming ? inv.sender_id : 'usr_me', // The frontend logic relies on 'usr_me'
+      senderId: isIncoming ? inv.sender_id : 'usr_me',
       receiverId: isIncoming ? 'usr_me' : inv.receiver_id,
-      senderName: counterpart?.name || 'Unknown User',
-      senderAvatar: counterpart?.avatar_url || '',
+      senderName: inv.sender?.name || 'Unknown User',
+      receiverName: inv.receiver?.name || 'Unknown User',
+      senderAvatar: inv.sender?.avatar_url || '',
       format: inv.format,
       proposedSlots: inv.time_options?.map((t: any) => t.proposed_slot) || [],
       selectedSlot: inv.selected_slot,
       status: inv.status,
       note: inv.note,
+      durationMinutes: inv.duration_minutes,
       createdAt: inv.created_at,
     };
   });

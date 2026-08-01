@@ -168,7 +168,13 @@ export default function InvitationsPage() {
             {activeTab === 'outgoing' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {outgoingList.length > 0 ? outgoingList.map((inv) => (
-                  <InvitationCard key={inv.id} invitation={inv} type="outgoing" />
+                  <InvitationCard 
+                    key={inv.id} 
+                    invitation={inv} 
+                    type="outgoing"
+                    onAccept={handleAccept}
+                    onDecline={handleDecline}
+                  />
                 )) : (
                   <div className="col-span-full py-12 text-center text-slate-400">
                     <Send className="w-12 h-12 mx-auto mb-4 opacity-20" />
