@@ -10,9 +10,10 @@ interface InvitationCardProps {
   onAccept?: (invitation: Invitation, selectedSlot: string) => void;
   onCounter?: (invitation: Invitation) => void;
   onDecline?: (invitationId: string) => void;
+  onEdit?: (invitation: Invitation) => void;
 }
 
-export function InvitationCard({ invitation, type, onAccept, onCounter, onDecline }: InvitationCardProps) {
+export function InvitationCard({ invitation, type, onAccept, onCounter, onDecline, onEdit }: InvitationCardProps) {
   const [selectedSlot, setSelectedSlot] = React.useState<string>(
     invitation.proposedSlots[0] || invitation.selectedSlot || ''
   );
@@ -127,10 +128,18 @@ export function InvitationCard({ invitation, type, onAccept, onCounter, onDeclin
         </div>
       )}
 
-      {/* Read-only status indicators for history / waiting states */}
+      {/* Read-only status indicators / Edit option for pending outgoing requests */}
       {type === 'outgoing' && invitation.status === 'pending' && (
-        <div className="pt-4 border-t border-white/5 text-center">
+        <div className="pt-4 border-t border-white/5 flex items-center justify-between">
           <span className="text-xs text-amber-300/70 font-medium">Waiting for response...</span>
+          {onEdit && (
+            <button
+              onClick={() => onEdit(invitation)}
+              className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 transition flex items-center gap-1.5"
+            >
+              Edit Details
+            </button>
+          )}
         </div>
       )}
       {type === 'history' && invitation.status === 'accepted' && (

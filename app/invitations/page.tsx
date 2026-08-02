@@ -6,8 +6,9 @@ import { Calendar, Inbox, Send, History, CheckCircle2, Loader2 } from 'lucide-re
 import { Navbar } from '@/components/navbar';
 import { InvitationCard } from '@/components/invitation-card';
 import { CounterOfferModal } from '@/components/counter-offer-modal';
+import { EditInvitationModal } from '@/components/edit-invitation-modal';
 import { Invitation } from '@/types';
-import { getInvitations, updateInvitationStatus } from '@/app/actions/invitations';
+import { getInvitations, updateInvitationStatus, editInvitationDetails } from '@/app/actions/invitations';
 
 export default function InvitationsPage() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function InvitationsPage() {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [counterTarget, setCounterTarget] = useState<Invitation | null>(null);
+  const [editTarget, setEditTarget] = useState<Invitation | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const loadInvitations = async () => {
@@ -65,7 +67,18 @@ export default function InvitationsPage() {
     try {
       await updateInvitationStatus(invitationId, 'declined');
       setToastMessage(`Invitation declined.`);
-      setTimeout(() => setToastMessage(null), 3000);
+      setTimeout(() => setToastMessage(null), 4000);
+      await loadInvitations();
+    } catch (e: any) {
+      alert(e.message);
+    }
+  };
+
+  const handleEditSave = async (invitationId: string, updatedData: any) => {
+    try {
+      await editInvitationDetails(invitationId, updatedData);
+      setToastMessage(`Invitation details updated successfully!`);
+      setTimeout(() => setToastMessage(null), 4000);
       await loadInvitations();
     } catch (e: any) {
       alert(e.message);
@@ -174,6 +187,7 @@ export default function InvitationsPage() {
                     type="outgoing"
                     onAccept={handleAccept}
                     onDecline={handleDecline}
+                    onEdit={(invitationToEdit) => setEditTarget(invitationToEdit)}
                   />
                 )) : (
                   <div className="col-span-full py-12 text-center text-slate-400">
@@ -206,6 +220,16 @@ export default function InvitationsPage() {
           onSubmit={(invitationId, slots, note) => {
             handleCounterSubmit(invitationId, slots, note);
             setCounterTarget(null);
+          }}
+        />
+
+        {/* Edit Invitation Modal */}
+        <EditInvitationModal
+          invitation={editTarget}
+          onClose={() => setEditTarget(null)}
+          onSave={(invitationId, updatedData) => {
+            handleEditSave(invitationId, updatedData);
+            setEditTarget(null);
           }}
         />
       </main>

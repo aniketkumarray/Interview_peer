@@ -174,3 +174,55 @@ export async function updateInvitationStatus(
   revalidatePath('/invitations');
   return { success: true, sessionId };
 }
+
+export async function editInvitationDetails(
+  invitationId: string,
+  details: {
+    format?: string;
+    durationMinutes?: number;
+    note?: string;
+    proposedSlots?: string[];
+  }
+) {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  if (!userData?.user) throw new Error('Not authenticated');
+
+  // Verify ownership & pending status
+  const { data: inv, error: fetchErr } = await supabase
+    .from('invitations')
+    .select('*')
+    .eq('id', invitationId)
+    .eq('sender_id', userData.user.id)
+    .single();
+
+  if (fetchErr || !inv) throw new Error('Invitation not found or you are not authorized to edit it');
+  if (inv.status !== 'pending') throw new Error('Can only edit invitations that are pending response');
+
+  const updates: any = {};
+  if (details.format) updates.format = details.format;
+  if (details.durationMinutes) updates.duration_minutes = details.durationMinutes;
+  if (details.note !== undefined) updates.note = details.note;
+
+  if (Object.keys(updates).length > 0) {
+    const { error: updateErr } = await supabase
+      .from('invitations')
+      .update(updates)
+      .eq('id', invitationId);
+
+    if (updateErr) throw new Error(`Failed to update invitation: ${updateErr.message}`);
+  }
+
+  // Update proposed slots if provided
+  if (details.proposedSlots && details.proposedSlots.length > 0) {
+    await supabase.from('invitation_time_options').delete().eq('invitation_id', invitationId);
+    const slotsToInsert = details.proposedSlots.map(slot => ({
+      invitation_id: invitationId,
+      proposed_slot: new Date(slot).toISOString()
+    }));
+    await supabase.from('invitation_time_options').insert(slotsToInsert);
+  }
+
+  revalidatePath('/invitations');
+  return { success: true };
+}

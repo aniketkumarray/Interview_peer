@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { X, RefreshCw } from 'lucide-react';
 import { Invitation } from '@/types';
+import { getFutureDateTime } from '@/lib/date-utils';
 
 interface CounterOfferModalProps {
   invitation: Invitation | null;
@@ -13,8 +14,8 @@ interface CounterOfferModalProps {
 export function CounterOfferModal({ invitation, onClose, onSubmit }: CounterOfferModalProps) {
   if (!invitation) return null;
 
-  const [slot1, setSlot1] = useState('2026-07-29T18:00');
-  const [slot2, setSlot2] = useState('2026-07-30T19:00');
+  const [slot1, setSlot1] = useState(() => getFutureDateTime(1, 18));
+  const [slot2, setSlot2] = useState(() => getFutureDateTime(2, 19));
   const [note, setNote] = useState('Hey! The initial proposed slots overlap with my work schedule. Could any of these alternative times work for you?');
 
   const handleSubmit = (e: React.FormEvent) => {

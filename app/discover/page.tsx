@@ -12,23 +12,59 @@ import { sendInvitation } from '@/app/actions/invitations';
 import { createClient } from '@/lib/supabase/client';
 
 function calculateMatchScore(currentUser: UserProfile | null | undefined, peer: UserProfile): number {
-  if (!currentUser) return Math.floor(Math.random() * 40) + 40; // Fallback for unauthenticated
+  if (!currentUser) return 0;
   
-  let score = 50; // Base score
+  let score = 15; // Base baseline compatibility
   
-  // High weight for matching role
-  if (currentUser.targetRole === peer.targetRole) score += 25;
+  // 1. Role Compatibility (Up to 35 points)
+  const userRole = (currentUser.targetRole || '').toLowerCase().trim();
+  const peerRole = (peer.targetRole || '').toLowerCase().trim();
   
-  // Moderate weight for overlapping formats
+  if (userRole && peerRole) {
+    if (userRole === peerRole) {
+      score += 35; // Exact role match
+    } else {
+      // Partial / keyword role match (e.g., both contain "frontend", "full stack", "backend", "system", "product", "manager", "data")
+      const keywords = ['frontend', 'backend', 'full stack', 'fullstack', 'system', 'mobile', 'ios', 'android', 'data', 'devops', 'product', 'security', 'lead', 'staff', 'senior'];
+      const sharedKeywords = keywords.filter(kw => userRole.includes(kw) && peerRole.includes(kw));
+      if (sharedKeywords.length > 0) {
+        score += 20;
+      } else {
+        score += 5; // General software domain match
+      }
+    }
+  }
+
+  // 2. Format Overlap (Up to 30 points: 10 pts per shared format)
   const userFormats = currentUser.formats || [];
   const peerFormats = peer.formats || [];
   const sharedFormats = userFormats.filter(f => peerFormats.includes(f));
-  if (sharedFormats.length > 0) score += 15;
-  
-  // Experience level bonus
-  if (currentUser.experienceLevel === peer.experienceLevel) score += 10;
-  
-  return Math.min(score, 99);
+  score += Math.min(sharedFormats.length * 10, 30);
+
+  // 3. Experience Level (Up to 15 points)
+  if (currentUser.experienceLevel && peer.experienceLevel) {
+    if (currentUser.experienceLevel === peer.experienceLevel) {
+      score += 15;
+    } else {
+      // Check if both are senior+ or entry/mid
+      const isUserSenior = currentUser.experienceLevel.includes('Senior') || currentUser.experienceLevel.includes('Lead');
+      const isPeerSenior = peer.experienceLevel.includes('Senior') || peer.experienceLevel.includes('Lead');
+      if (isUserSenior === isPeerSenior) {
+        score += 8;
+      }
+    }
+  }
+
+  // 4. Timezone & Language Proximity (Up to 10 points)
+  if (currentUser.timezone && peer.timezone) {
+    if (currentUser.timezone === peer.timezone) {
+      score += 10;
+    } else if (currentUser.timezone.substring(0, 5) === peer.timezone.substring(0, 5)) {
+      score += 5;
+    }
+  }
+
+  return Math.min(Math.max(score, 25), 98);
 }
 
 export default function DiscoverPage() {

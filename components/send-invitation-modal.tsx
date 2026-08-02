@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { X, Send, Calendar, Clock, Sparkles } from 'lucide-react';
 import { UserProfile, InterviewFormat } from '@/types';
+import { getFutureDateTime } from '@/lib/date-utils';
 
 interface SendInvitationModalProps {
   peer: UserProfile | null;
@@ -22,9 +23,9 @@ export function SendInvitationModal({ peer, onClose, onSend }: SendInvitationMod
   const [selectedFormat, setSelectedFormat] = useState<InterviewFormat>(peer.formats[0] || 'System Design');
   const [duration, setDuration] = useState<30 | 45 | 60>(45);
   const [note, setNote] = useState(`Hi ${peer.name.split(' ')[0]}! Would love to swap reciprocal mock interviews on ${selectedFormat}. Let me know if any of these times work!`);
-  const [slot1, setSlot1] = useState('2026-07-28T18:00');
-  const [slot2, setSlot2] = useState('2026-07-29T19:00');
-  const [slot3, setSlot3] = useState('2026-07-30T17:00');
+  const [slot1, setSlot1] = useState(() => getFutureDateTime(1, 18));
+  const [slot2, setSlot2] = useState(() => getFutureDateTime(2, 19));
+  const [slot3, setSlot3] = useState(() => getFutureDateTime(3, 17));
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
