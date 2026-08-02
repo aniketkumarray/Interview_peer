@@ -1,24 +1,51 @@
 'use client';
 
-import React, { useState } from 'react';
-import Image from 'next/image';
-import { Trophy, Award, Users, Info, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Trophy, Award, Info, ShieldCheck, CheckCircle2, Loader2, AlertTriangle } from 'lucide-react';
 import { Navbar } from '@/components/navbar';
-import { MOCK_LEADERBOARD, MOCK_CURRENT_USER } from '@/lib/demo-store';
+import { getLeaderboard, toggleLeaderboardOptIn } from '@/app/actions/leaderboard';
 
 export default function LeaderboardPage() {
-  const [optIn, setOptIn] = useState(MOCK_CURRENT_USER.leaderboardOptIn);
+  const [entries, setEntries] = useState<any[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [optIn, setOptIn] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const handleToggleOptIn = () => {
-    const nextState = !optIn;
-    setOptIn(nextState);
-    setToastMessage(
-      nextState
-        ? 'You have opted into the Weekly Leaderboard! Your verified sessions will now appear on rankings.'
-        : 'You have opted out of the Weekly Leaderboard. Your milestone badges remain intact.'
-    );
-    setTimeout(() => setToastMessage(null), 4000);
+  useEffect(() => {
+    async function load() {
+      try {
+        const data = await getLeaderboard();
+        setEntries(data.entries);
+        setCurrentUserId(data.currentUserId);
+        // Check if current user is in the list (opted in)
+        const userEntry = data.entries.find((e: any) => e.userId === data.currentUserId);
+        setOptIn(!!userEntry);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
+  const handleToggleOptIn = async () => {
+    try {
+      const res = await toggleLeaderboardOptIn();
+      setOptIn(res.optedIn);
+      setToastMessage(
+        res.optedIn
+          ? 'You have opted into the Weekly Leaderboard! Your verified sessions will now appear on rankings.'
+          : 'You have opted out of the Weekly Leaderboard. Your milestone badges remain intact.'
+      );
+      // Reload leaderboard
+      const data = await getLeaderboard();
+      setEntries(data.entries);
+      setTimeout(() => setToastMessage(null), 4000);
+    } catch (e: any) {
+      alert(e.message);
+    }
   };
 
   return (
@@ -38,11 +65,11 @@ export default function LeaderboardPage() {
           <div>
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-semibold mb-2">
               <Trophy className="w-3.5 h-3.5" />
-              <span>Weekly Top 20 Rankings</span>
+              <span>Top 20 Rankings</span>
             </div>
             <h1 className="text-3xl font-extrabold text-white">Peer Practice Leaderboard</h1>
             <p className="text-slate-400 text-sm mt-1">
-              Ranks opted-in job seekers by verified mock interviews completed this UTC week.
+              Ranks opted-in job seekers by verified mock interviews completed. Score only counts after both participants confirm and submit feedback.
             </p>
           </div>
 
@@ -70,70 +97,90 @@ export default function LeaderboardPage() {
           <div className="p-4 sm:p-6 bg-slate-900/60 border-b border-white/10 flex items-center justify-between text-xs text-slate-400">
             <span className="flex items-center gap-1.5">
               <Info className="w-4 h-4 text-teal-400" />
-              Ties broken by <strong>Unique Practice Partners</strong> count.
+              Scores update after <strong>both</strong> participants confirm session completion and submit feedback.
             </span>
-            <span>Week resets Sunday 23:59 UTC</span>
           </div>
 
-          <div className="divide-y divide-white/5">
-            {MOCK_LEADERBOARD.map((entry) => {
-              const isCurrentUser = entry.userId === MOCK_CURRENT_USER.id;
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+              <Loader2 className="w-10 h-10 animate-spin mb-3 text-sandow-500" />
+              <p className="text-sm">Loading leaderboard...</p>
+            </div>
+          ) : entries.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+              <Trophy className="w-10 h-10 mb-3 opacity-20" />
+              <p className="text-sm">No participants yet. Be the first to opt in!</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-white/5">
+              {entries.map((entry: any) => {
+                const isCurrentUser = entry.userId === currentUserId;
 
-              return (
-                <div
-                  key={entry.userId}
-                  className={`p-4 sm:p-5 flex items-center justify-between gap-4 transition ${
-                    isCurrentUser
-                      ? 'bg-gradient-to-r from-teal-500/10 via-violet-500/10 to-transparent border-l-4 border-l-teal-400'
-                      : 'hover:bg-white/5'
-                  }`}
-                >
-                  <div className="flex items-center space-x-4">
-                    {/* Rank Indicator */}
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-extrabold text-sm ${
-                      entry.rank === 1 ? 'bg-amber-400 text-slate-950 shadow-lg shadow-amber-400/20' :
-                      entry.rank === 2 ? 'bg-slate-300 text-slate-950' :
-                      entry.rank === 3 ? 'bg-amber-700 text-white' :
-                      'bg-slate-900 border border-slate-800 text-slate-400'
-                    }`}>
-                      #{entry.rank}
-                    </div>
+                return (
+                  <div
+                    key={entry.userId}
+                    className={`p-4 sm:p-5 flex items-center justify-between gap-4 transition ${
+                      isCurrentUser
+                        ? 'bg-gradient-to-r from-teal-500/10 via-violet-500/10 to-transparent border-l-4 border-l-teal-400'
+                        : 'hover:bg-white/5'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-4">
+                      {/* Rank Indicator */}
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-extrabold text-sm ${
+                        entry.rank === 1 ? 'bg-amber-400 text-slate-950 shadow-lg shadow-amber-400/20' :
+                        entry.rank === 2 ? 'bg-slate-300 text-slate-950' :
+                        entry.rank === 3 ? 'bg-amber-700 text-white' :
+                        'bg-slate-900 border border-slate-800 text-slate-400'
+                      }`}>
+                        #{entry.rank}
+                      </div>
 
-                    {/* Avatar & User Details */}
-                    <div className="relative w-11 h-11 rounded-xl overflow-hidden border border-white/10 shrink-0">
-                      <Image src={entry.avatarUrl} alt={entry.name} fill className="object-cover" />
-                    </div>
-
-                    <div>
-                      <div className="font-bold text-sm text-white flex items-center gap-2">
-                        <span>{entry.name}</span>
-                        {isCurrentUser && (
-                          <span className="text-[10px] px-2 py-0.5 rounded bg-teal-500/20 text-teal-300 font-semibold border border-teal-500/30">
-                            YOU
-                          </span>
+                      {/* Avatar & User Details */}
+                      <div className="relative w-11 h-11 rounded-xl overflow-hidden border border-white/10 shrink-0 bg-slate-800">
+                        {entry.avatarUrl && (
+                          <img src={entry.avatarUrl} alt={entry.name} className="w-full h-full object-cover" />
                         )}
                       </div>
-                      <div className="text-xs text-slate-400 mt-0.5">{entry.targetRole}</div>
+
+                      <div>
+                        <div className="font-bold text-sm text-white flex items-center gap-2">
+                          <span>{entry.name}</span>
+                          {isCurrentUser && (
+                            <span className="text-[10px] px-2 py-0.5 rounded bg-teal-500/20 text-teal-300 font-semibold border border-teal-500/30">
+                              YOU
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-slate-400 mt-0.5 flex items-center gap-2">
+                          <span>{entry.targetRole}</span>
+                          {entry.noShowCount > 0 && (
+                            <span className="inline-flex items-center gap-0.5 text-[10px] text-red-400/70">
+                              <AlertTriangle className="w-3 h-3" />
+                              {entry.noShowCount} no-show{entry.noShowCount !== 1 ? 's' : ''}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Badge & Stats */}
+                    <div className="flex items-center space-x-6 text-right">
+                      <div className="hidden sm:block text-xs">
+                        <span className="px-2.5 py-1 rounded-full bg-violet-500/15 border border-violet-500/30 text-violet-300 font-semibold">
+                          {entry.currentBadge}
+                        </span>
+                      </div>
+
+                      <div>
+                        <div className="font-bold text-base text-teal-400">{entry.weeklyCount} Mocks</div>
+                      </div>
                     </div>
                   </div>
-
-                  {/* Badge & Weekly Stats */}
-                  <div className="flex items-center space-x-6 text-right">
-                    <div className="hidden sm:block text-xs">
-                      <span className="px-2.5 py-1 rounded-full bg-violet-500/15 border border-violet-500/30 text-violet-300 font-semibold">
-                        {entry.currentBadge}
-                      </span>
-                    </div>
-
-                    <div>
-                      <div className="font-bold text-base text-teal-400">{entry.weeklyCount} Mocks</div>
-                      <div className="text-[11px] text-slate-400">{entry.uniquePartnersCount} unique partners</div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </main>
     </div>

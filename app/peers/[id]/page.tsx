@@ -103,6 +103,15 @@ export default function PeerProfilePage() {
                 <span className="font-bold text-base text-white">{earnedBadges.length}</span>
                 <span className="ml-1">Badges Earned</span>
               </div>
+              {(peer as any).noShowCount > 0 && (
+                <>
+                  <div className="w-px h-4 bg-white/10" />
+                  <div className="text-red-400/80">
+                    <span className="font-bold text-base">{(peer as any).noShowCount}</span>
+                    <span className="ml-1">No-Show{(peer as any).noShowCount !== 1 ? 's' : ''}</span>
+                  </div>
+                </>
+              )}
             </div>
 
             <button

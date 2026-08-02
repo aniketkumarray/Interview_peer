@@ -43,6 +43,7 @@ export async function getSessions() {
       status: session.status,
       userConfirmed: isUser1 ? session.user1_confirmed : session.user2_confirmed,
       partnerConfirmed: isUser1 ? session.user2_confirmed : session.user1_confirmed,
+      userRole: isUser1 ? 'interviewer' as const : 'interviewee' as const,
     };
   });
 }
@@ -71,6 +72,23 @@ export async function getSessionById(sessionId: string) {
 
   const isUser1 = data.user1_id === userId;
   const partner = isUser1 ? data.user2 : data.user1;
+  const userRole: 'interviewer' | 'interviewee' = isUser1 ? 'interviewer' : 'interviewee';
+
+  // Differentiate Jitsi URL by role
+  // Interviewer (user1/sender) gets host-like URL config
+  // Interviewee gets standard join URL
+  const baseRoomUrl = data.jitsi_room_url;
+  const userName = isUser1 ? data.user1?.name : data.user2?.name;
+  const encodedName = encodeURIComponent(userName || 'Participant');
+
+  let jitsiRoomUrl: string;
+  if (userRole === 'interviewer') {
+    // Interviewer: auto-join as moderator-like experience
+    jitsiRoomUrl = `${baseRoomUrl}#userInfo.displayName="${encodedName}"&config.prejoinConfig.enabled=false&config.startWithAudioMuted=false&config.startWithVideoMuted=false`;
+  } else {
+    // Interviewee: standard join with pre-join screen
+    jitsiRoomUrl = `${baseRoomUrl}#userInfo.displayName="${encodedName}"&config.prejoinConfig.enabled=true`;
+  }
 
   return {
     id: data.id,
@@ -81,10 +99,11 @@ export async function getSessionById(sessionId: string) {
     format: data.format,
     durationMinutes: data.duration_minutes,
     scheduledAt: data.scheduled_at,
-    jitsiRoomUrl: data.jitsi_room_url,
+    jitsiRoomUrl,
     status: data.status,
     userConfirmed: isUser1 ? data.user1_confirmed : data.user2_confirmed,
     partnerConfirmed: isUser1 ? data.user2_confirmed : data.user1_confirmed,
+    userRole,
   };
 }
 
@@ -94,7 +113,6 @@ export async function confirmSessionCompletion(sessionId: string) {
   
   if (!userData?.user) throw new Error('Not authenticated');
 
-  // Call the atomic RPC function defined in the database schema
   const { data, error } = await supabase.rpc('confirm_session_completion', {
     p_session_id: sessionId,
     p_user_id: userData.user.id
