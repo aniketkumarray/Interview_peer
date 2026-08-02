@@ -92,7 +92,7 @@ export default function SessionDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+      <div className="min-h-screen bg-[#0A0A0A] text-slate-100 flex flex-col">
         <Navbar />
         <div className="flex flex-col items-center justify-center flex-1 text-slate-400">
           <Loader2 className="w-12 h-12 animate-spin mb-4 text-sandow-500" />
@@ -104,7 +104,7 @@ export default function SessionDetailPage() {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+      <div className="min-h-screen bg-[#0A0A0A] text-slate-100 flex flex-col">
         <Navbar />
         <div className="flex flex-col items-center justify-center flex-1 text-slate-400">
           <p>Session not found.</p>
@@ -114,7 +114,7 @@ export default function SessionDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-[#0A0A0A] text-slate-100 flex flex-col">
       <Navbar />
 
       <main className="flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">

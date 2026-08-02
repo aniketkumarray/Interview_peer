@@ -166,7 +166,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="mt-auto border-t border-white/10 bg-slate-950 py-8 text-center text-xs text-slate-500">
+      <footer className="mt-auto border-t border-white/10 bg-[#0A0A0A] py-8 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto px-4">
           <p>© 2026 PeerConnect — Reciprocal Mock Interview Marketplace. Built with Next.js & Supabase.</p>
         </div>

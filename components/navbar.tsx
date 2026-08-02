@@ -17,6 +17,7 @@ import {
   ChevronDown,
   Menu,
   X,
+  Bot,
 } from 'lucide-react';
 import { NotificationsPopover } from '@/components/notifications-popover';
 
@@ -32,6 +33,7 @@ export function Navbar() {
 
   const navItems = [
     { href: '/discover', label: 'Discover Peers', icon: Compass, requiresAuth: false },
+    { href: '/practice/ai', label: 'AI Mock Practice', icon: Bot, requiresAuth: false },
     { href: '/invitations', label: 'Invitations', icon: Calendar, requiresAuth: true },
     { href: '/sessions', label: 'Sessions', icon: Video, requiresAuth: true },
     { href: '/leaderboard', label: 'Leaderboard', icon: Trophy, requiresAuth: false },
@@ -45,7 +47,7 @@ export function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 glass-panel border-b border-white/10 bg-slate-950/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 glass-panel border-b border-white/10 bg-[#0A0A0A]/80 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Brand Logo */}
