@@ -147,15 +147,76 @@ Return your response strictly as a raw JSON array of 4 strings (e.g. ["q1", "q2"
  * Generates an intelligent heuristic fallback evaluation if Gemini is unconfigured/unavailable
  */
 function generateFallbackScorecard(qaPairs: QAPair[]): ComprehensiveScorecard {
-  const attemptedCount = qaPairs.filter(p => p.answer && p.answer !== '(Skipped)').length;
+  const attemptedCount = qaPairs.filter(p => p.answer && p.answer.trim() !== '' && p.answer !== '(Skipped)').length;
   const skippedCount = 4 - attemptedCount;
   
-  let overallScore = 7.5;
+  let overallScore = 8.5;
   if (skippedCount === 1) overallScore = 6.2;
-  if (skippedCount === 2) overallScore = 4.8;
-  if (skippedCount >= 3) overallScore = 3.5;
+  if (skippedCount === 2) overallScore = 4.5;
+  if (skippedCount === 3) overallScore = 2.8;
+  if (skippedCount === 4) overallScore = 1.0;
 
-  const passed = overallScore >= 6.0;
+  const passed = overallScore >= 6.0 && skippedCount <= 1;
+
+  if (attemptedCount === 0) {
+    return {
+      passed: false,
+      passMessage: "All 4 questions were skipped without attempt. Please re-take the interview to receive a full evaluation.",
+      overallScore: 1.0,
+      criteria: {
+        overallValue: 1.0,
+        skippedCount: 4,
+        lowestValue: 1.0
+      },
+      badges: [],
+      metrics: {
+        clarity: 1.0,
+        confidence: 1.0,
+        relevance: 1.0,
+        depthOfKnowledge: 1.0,
+        structure: 1.0,
+        vocabulary: 1.0
+      },
+      stats: {
+        attempted: "0/4",
+        totalTime: "0m 15s",
+        focusArea: "Attempting Questions",
+        skipped: 4
+      },
+      generalFeedback: {
+        strengths: ["Completed interview setup. No responses were provided to evaluate strengths."],
+        weaknesses: ["All 4 questions were skipped without attempting an answer."],
+        suggestions: ["Speak or type an answer for each question using the STAR framework."]
+      },
+      vocabularyFeedback: {
+        strengths: ["N/A - No speech recorded."],
+        weaknesses: ["No vocabulary recorded for evaluation."],
+        suggestions: ["Attempt questions using technical domain terminology."]
+      },
+      fluencyFeedback: {
+        strengths: ["N/A - No speech recorded."],
+        weaknesses: ["No audio or speech recorded."],
+        suggestions: ["Use the microphone button to record verbal answers."]
+      },
+      grammarFeedback: {
+        strengths: ["N/A - No speech recorded."],
+        weaknesses: ["No text or audio submitted."],
+        suggestions: ["Provide complete sentences when answering."]
+      },
+      interactionFeedback: {
+        strengths: ["N/A - No speech recorded."],
+        weaknesses: ["No interview interaction recorded."],
+        suggestions: ["Engage with each question prompt in full."]
+      },
+      questions: qaPairs.map(pair => ({
+        question: pair.question,
+        userAnswer: '(Skipped)',
+        feedback: "Question was skipped. Attempt every question to receive detailed feedback.",
+        betterAnswer: `A comprehensive answer for "${pair.question}" should state the core objective, outline key steps/trade-offs, and conclude with measurable impact.`
+      })),
+      recommendedKeywords: ["stakeholder management", "scalability", "cross-functional ownership", "measurable impact", "trade-off analysis"]
+    };
+  }
 
   return {
     passed,
@@ -166,18 +227,18 @@ function generateFallbackScorecard(qaPairs: QAPair[]): ComprehensiveScorecard {
     criteria: {
       overallValue: overallScore,
       skippedCount,
-      lowestValue: Math.max(overallScore - 1.5, 3.0)
+      lowestValue: Math.max(overallScore - 1.5, 1.0)
     },
     badges: passed 
       ? ["Clear Communicator", "Confident Speaker", "Knowledge Ace", "Interview Ready"] 
-      : ["Practice Regular", "Active Listener"],
+      : ["Practice Regular"],
     metrics: {
-      clarity: Math.min(overallScore + 0.5, 9.5),
-      confidence: Math.min(overallScore, 9.0),
-      relevance: Math.min(overallScore + 0.3, 9.2),
-      depthOfKnowledge: Math.max(overallScore - 0.5, 4.0),
-      structure: Math.min(overallScore, 8.8),
-      vocabulary: Math.min(overallScore + 0.4, 9.0)
+      clarity: Math.max(Math.min(overallScore + 0.5, 9.5), 1.0),
+      confidence: Math.max(Math.min(overallScore, 9.0), 1.0),
+      relevance: Math.max(Math.min(overallScore + 0.3, 9.2), 1.0),
+      depthOfKnowledge: Math.max(overallScore - 0.5, 1.0),
+      structure: Math.max(Math.min(overallScore, 8.8), 1.0),
+      vocabulary: Math.max(Math.min(overallScore + 0.4, 9.0), 1.0)
     },
     stats: {
       attempted: `${attemptedCount}/4`,
@@ -187,11 +248,11 @@ function generateFallbackScorecard(qaPairs: QAPair[]): ComprehensiveScorecard {
     },
     generalFeedback: {
       strengths: [
-        "Structured responses directly addressing the interview questions.",
-        "Clear articulation of technical concepts and career experiences."
+        "Attempted key technical interview questions.",
+        "Demonstrated effort in completing the mock interview workflow."
       ],
       weaknesses: [
-        skippedCount > 0 ? "Some questions were skipped, affecting overall depth." : "Could incorporate more quantitative metrics and ROI data."
+        skippedCount > 0 ? `${skippedCount} question(s) were skipped, impacting your depth score.` : "Could incorporate more quantitative metrics and ROI data."
       ],
       suggestions: [
         "Use the STAR framework (Situation, Task, Action, Result) for behavioral answers.",
@@ -221,7 +282,7 @@ function generateFallbackScorecard(qaPairs: QAPair[]): ComprehensiveScorecard {
     questions: qaPairs.map((pair, i) => ({
       question: pair.question,
       userAnswer: pair.answer || '(Skipped)',
-      feedback: pair.answer === '(Skipped)' 
+      feedback: (!pair.answer || pair.answer === '(Skipped)') 
         ? "Question was skipped. Be sure to attempt every question, even with a partial outline."
         : `Strong effort on Q${i+1}. Ensure you highlight trade-offs and quantifiable business impact.`,
       betterAnswer: `A comprehensive answer for "${pair.question}" should state the core objective, outline key steps/trade-offs, and conclude with measurable impact.`
@@ -245,6 +306,15 @@ export async function generateFeedbackScorecard(
 
   const prompt = `You are an expert executive interviewer evaluating a candidate's complete 4-question interview performance.
 Analyze all 4 questions and answers: ${JSON.stringify(qaPairs)}
+
+SPECIAL INSTRUCTION FOR SKIPPED QUESTIONS:
+If all 4 questions or most questions were skipped (answer equals '(Skipped)' or empty), you MUST:
+1. Set passed = false
+2. Set overallScore <= 3.0 (if all 4 skipped, overallScore = 1.0)
+3. Set all metrics (clarity, confidence, relevance, depthOfKnowledge, structure, vocabulary) to low values (1.0 to 3.0)
+4. Set badges = []
+5. In generalFeedback.strengths state clearly that no answers were provided to evaluate strengths.
+6. In generalFeedback.weaknesses explicitly state that questions were skipped without attempt.
 
 You MUST output your evaluation strictly as a raw JSON object matching this EXACT schema:
 {

@@ -22,6 +22,7 @@ import {
   AlertTriangle,
   Lightbulb,
   Check,
+  X,
   Tag,
   SkipForward
 } from 'lucide-react';
@@ -59,25 +60,18 @@ export function AIInterviewRoom({ format, domain, onReset }: AIInterviewRoomProp
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
         recognition.interimResults = true;
-        recognition.lang = 'en-IN'; // Indian English tuning
+        recognition.lang = (navigator.language && navigator.language.length > 0) ? navigator.language : 'en-US';
         
         recognition.onresult = (event: any) => {
-          let interimTranscript = '';
-          let finalTranscript = '';
-          
-          for (let i = event.resultIndex; i < event.results.length; ++i) {
-            if (event.results[i].isFinal) {
-              finalTranscript += event.results[i][0].transcript;
-            } else {
-              interimTranscript += event.results[i][0].transcript;
-            }
+          let fullTranscript = '';
+          for (let i = 0; i < event.results.length; ++i) {
+            fullTranscript += event.results[i][0].transcript;
           }
           
-          if (finalTranscript) {
-            currentInterimText.current += finalTranscript + ' ';
+          if (fullTranscript.trim()) {
             setAnswers(prev => {
               const updated = [...prev];
-              updated[currentIndex] = currentInterimText.current.trim();
+              updated[currentIndex] = fullTranscript;
               return updated;
             });
           }
@@ -85,8 +79,8 @@ export function AIInterviewRoom({ format, domain, onReset }: AIInterviewRoomProp
 
         recognition.onerror = (event: any) => {
           console.error("Speech recognition error:", event.error);
-          if (event.error !== 'aborted') {
-            setError(`Microphone error: ${event.error}`);
+          if (event.error !== 'aborted' && event.error !== 'no-speech') {
+            setError(`Microphone notice: ${event.error}. You can also type your answer directly in the box below.`);
             setIsRecording(false);
           }
         };
@@ -97,7 +91,7 @@ export function AIInterviewRoom({ format, domain, onReset }: AIInterviewRoomProp
 
         recognitionRef.current = recognition;
       } else {
-        setError("Your browser doesn't support speech recognition. Please use Google Chrome.");
+        setError("Speech recognition is limited in this browser. You can type your answers directly in the response box below.");
       }
     }
   }, [currentIndex]);
@@ -373,35 +367,54 @@ export function AIInterviewRoom({ format, domain, onReset }: AIInterviewRoomProp
 
           {/* Criteria Cards Row */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 pt-6 border-t border-white/10">
-            <div className="glass-panel p-4 rounded-xl flex items-center space-x-3 border border-white/5 bg-slate-900/40">
-              <div className="w-7 h-7 rounded-full bg-sandow-500/20 text-sandow-400 flex items-center justify-center shrink-0">
-                <Check className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-white">Overall ≥ 6.0</p>
-                <p className="text-xs text-slate-400">you: {feedback.criteria?.overallValue || feedback.overallScore}</p>
-              </div>
-            </div>
+            {(() => {
+              const overallVal = feedback.criteria?.overallValue ?? feedback.overallScore ?? 0;
+              const overallPass = overallVal >= 6.0;
+              const skipsVal = feedback.criteria?.skippedCount ?? skippedCount;
+              const skipsPass = skipsVal <= 1;
+              const lowestVal = feedback.criteria?.lowestValue ?? 0;
+              const lowestPass = lowestVal >= 4.0;
 
-            <div className="glass-panel p-4 rounded-xl flex items-center space-x-3 border border-white/5 bg-slate-900/40">
-              <div className="w-7 h-7 rounded-full bg-sandow-500/20 text-sandow-400 flex items-center justify-center shrink-0">
-                <Check className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-white">Max 1 skip</p>
-                <p className="text-xs text-slate-400">you skipped: {skippedCount}</p>
-              </div>
-            </div>
+              return (
+                <>
+                  <div className="glass-panel p-4 rounded-xl flex items-center space-x-3 border border-white/5 bg-slate-900/40">
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
+                      overallPass ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                    }`}>
+                      {overallPass ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-white">Overall ≥ 6.0</p>
+                      <p className="text-xs text-slate-400">you: {overallVal.toFixed(1)}</p>
+                    </div>
+                  </div>
 
-            <div className="glass-panel p-4 rounded-xl flex items-center space-x-3 border border-white/5 bg-slate-900/40">
-              <div className="w-7 h-7 rounded-full bg-sandow-500/20 text-sandow-400 flex items-center justify-center shrink-0">
-                <Check className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-white">No area below 4.0</p>
-                <p className="text-xs text-slate-400">your lowest: {feedback.criteria?.lowestValue || '7.5'}</p>
-              </div>
-            </div>
+                  <div className="glass-panel p-4 rounded-xl flex items-center space-x-3 border border-white/5 bg-slate-900/40">
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
+                      skipsPass ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                    }`}>
+                      {skipsPass ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-white">Max 1 skip</p>
+                      <p className="text-xs text-slate-400">you skipped: {skipsVal}</p>
+                    </div>
+                  </div>
+
+                  <div className="glass-panel p-4 rounded-xl flex items-center space-x-3 border border-white/5 bg-slate-900/40">
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
+                      lowestPass ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                    }`}>
+                      {lowestPass ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-white">No area below 4.0</p>
+                      <p className="text-xs text-slate-400">your lowest: {lowestVal.toFixed(1)}</p>
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
           </div>
 
           {/* Earned Badges Chips */}
@@ -717,17 +730,20 @@ export function AIInterviewRoom({ format, domain, onReset }: AIInterviewRoomProp
           )}
         </div>
 
-        <div className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 min-h-[140px] text-sm text-slate-200 focus-within:border-sandow-500 transition">
-          {currentAnswer ? (
-            <p className={`whitespace-pre-wrap ${currentAnswer === '(Skipped)' ? 'text-amber-400 italic' : ''}`}>
-              {currentAnswer}
-            </p>
-          ) : (
-            <p className="text-slate-500 italic">
-              {isRecording ? 'Listening... Speak your response now.' : 'Click the microphone button below to start recording your answer.'}
-            </p>
-          )}
-        </div>
+        <textarea
+          rows={5}
+          value={currentAnswer === '(Skipped)' ? '' : currentAnswer}
+          onChange={(e) => {
+            const val = e.target.value;
+            setAnswers(prev => {
+              const copy = [...prev];
+              copy[currentIndex] = val;
+              return copy;
+            });
+          }}
+          placeholder={isRecording ? 'Listening... Speak your response or type directly here.' : 'Click the microphone button to speak, or type your answer directly here...'}
+          className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-sm text-slate-200 focus:outline-none focus:border-sandow-500 transition placeholder:text-slate-500 placeholder:italic resize-y"
+        />
       </div>
 
       {/* Recording & Navigation Controls */}
