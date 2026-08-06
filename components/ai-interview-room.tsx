@@ -114,7 +114,12 @@ export function AIInterviewRoom({ format, domain, onReset }: AIInterviewRoomProp
           speakText(qList[0]);
         }
       } catch (err: any) {
-        setError(err.message || 'Failed to load interview questions.');
+        const rawMsg = err.message || '';
+        if (rawMsg.includes('Server Components render') || rawMsg.includes('digest')) {
+          setError('Notice: AI Interview key is unconfigured in production. Using practice question set.');
+        } else {
+          setError(rawMsg || 'Failed to load interview questions.');
+        }
       } finally {
         setIsLoadingQuestions(false);
       }
