@@ -202,8 +202,8 @@ export async function fetchInitialQuestions(
   const prompt = `You are a top-tier executive interviewer. Generate exactly 4 distinct, realistic, high-quality interview questions for a ${format} interview in the ${domain} domain.
 Return your response strictly as a raw JSON array of 4 strings (e.g. ["q1", "q2", "q3", "q4"]). Keep each question concise, professional, and under 35 words.`;
 
-  // Try active Gemini models with fallback
-  const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash-001', 'gemini-flash-latest', 'gemini-2.5-pro'];
+  // Primary default: ultra low-cost Flash Lite model, with Flash fallbacks
+  const modelsToTry = ['gemini-flash-lite-latest', 'gemini-2.5-flash', 'gemini-flash-latest'];
 
   for (const modelName of modelsToTry) {
     try {
@@ -468,7 +468,7 @@ You MUST output your evaluation strictly as a raw JSON object matching this EXAC
   "recommendedKeywords": ["stakeholder management", "ownership", "cross-functional", "measurable impact", "career growth"]
 }`;
 
-  const modelsToTry = ['gemini-2.5-flash', 'gemini-2.0-flash-001', 'gemini-flash-latest', 'gemini-2.5-pro'];
+  const modelsToTry = ['gemini-flash-lite-latest', 'gemini-2.5-flash', 'gemini-flash-latest'];
 
   for (const modelName of modelsToTry) {
     try {
