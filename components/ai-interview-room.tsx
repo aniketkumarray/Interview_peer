@@ -63,15 +63,24 @@ export function AIInterviewRoom({ format, domain, onReset }: AIInterviewRoomProp
         recognition.lang = (navigator.language && navigator.language.length > 0) ? navigator.language : 'en-US';
         
         recognition.onresult = (event: any) => {
-          let fullTranscript = '';
+          let finalTranscript = '';
+          let interimTranscript = '';
+          
           for (let i = 0; i < event.results.length; ++i) {
-            fullTranscript += event.results[i][0].transcript;
+            const result = event.results[i];
+            if (result.isFinal) {
+              finalTranscript += result[0].transcript;
+            } else {
+              interimTranscript += result[0].transcript;
+            }
           }
           
-          if (fullTranscript.trim()) {
+          // Combine finalized text with the latest interim fragment
+          const combined = (finalTranscript + interimTranscript).trim();
+          if (combined) {
             setAnswers(prev => {
               const updated = [...prev];
-              updated[currentIndex] = fullTranscript;
+              updated[currentIndex] = combined;
               return updated;
             });
           }
