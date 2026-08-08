@@ -48,7 +48,8 @@ export function AIInterviewRoom({ format, domain, onReset }: AIInterviewRoomProp
   
   const recognitionRef = useRef<any>(null);
   const synthesisRef = useRef<SpeechSynthesis | null>(null);
-  const currentInterimText = useRef<string>('');
+  // Tracks text accumulated before the current recording session started
+  const baseTranscriptRef = useRef<string>('');
 
   // Speech Recognition & Synthesis Initialization
   useEffect(() => {
@@ -61,29 +62,39 @@ export function AIInterviewRoom({ format, domain, onReset }: AIInterviewRoomProp
         recognition.continuous = true;
         recognition.interimResults = true;
         recognition.lang = (navigator.language && navigator.language.length > 0) ? navigator.language : 'en-US';
+        // Limit to single best alternative to reduce noise on mobile
+        recognition.maxAlternatives = 1;
         
         recognition.onresult = (event: any) => {
-          let finalTranscript = '';
-          let interimTranscript = '';
+          let sessionFinal = '';
+          let sessionInterim = '';
           
-          for (let i = 0; i < event.results.length; ++i) {
+          // Only process results from the current recognition session
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
             const result = event.results[i];
+            const transcript = result[0].transcript;
             if (result.isFinal) {
-              finalTranscript += result[0].transcript;
+              sessionFinal += transcript;
             } else {
-              interimTranscript += result[0].transcript;
+              // Only take the last interim result to avoid duplicating partial recognitions
+              sessionInterim = transcript;
             }
           }
           
-          // Combine finalized text with the latest interim fragment
-          const combined = (finalTranscript + interimTranscript).trim();
-          if (combined) {
-            setAnswers(prev => {
-              const updated = [...prev];
-              updated[currentIndex] = combined;
-              return updated;
-            });
+          // Build full answer: base (pre-existing) + session final + current interim
+          const base = baseTranscriptRef.current;
+          const combined = (base + sessionFinal + sessionInterim).trim();
+          
+          // When we get final results, update the base so future interim results don't duplicate
+          if (sessionFinal) {
+            baseTranscriptRef.current = (base + sessionFinal).trimStart();
           }
+          
+          setAnswers(prev => {
+            const updated = [...prev];
+            updated[currentIndex] = combined;
+            return updated;
+          });
         };
 
         recognition.onerror = (event: any) => {
@@ -171,7 +182,8 @@ export function AIInterviewRoom({ format, domain, onReset }: AIInterviewRoomProp
       setIsRecording(false);
     } else {
       if (synthesisRef.current) synthesisRef.current.cancel();
-      currentInterimText.current = answers[currentIndex] && answers[currentIndex] !== '(Skipped)' ? answers[currentIndex] + ' ' : '';
+      // Set base to existing answer text so new speech appends to it
+      baseTranscriptRef.current = answers[currentIndex] && answers[currentIndex] !== '(Skipped)' ? answers[currentIndex] + ' ' : '';
       setError(null);
       try {
         recognitionRef.current?.start();
@@ -191,7 +203,7 @@ export function AIInterviewRoom({ format, domain, onReset }: AIInterviewRoomProp
     if (currentIndex < questions.length - 1) {
       const nextIdx = currentIndex + 1;
       setCurrentIndex(nextIdx);
-      currentInterimText.current = answers[nextIdx] && answers[nextIdx] !== '(Skipped)' ? answers[nextIdx] : '';
+      baseTranscriptRef.current = answers[nextIdx] && answers[nextIdx] !== '(Skipped)' ? answers[nextIdx] : '';
       speakText(questions[nextIdx]);
     }
   };
@@ -205,7 +217,7 @@ export function AIInterviewRoom({ format, domain, onReset }: AIInterviewRoomProp
     if (currentIndex > 0) {
       const prevIdx = currentIndex - 1;
       setCurrentIndex(prevIdx);
-      currentInterimText.current = answers[prevIdx] && answers[prevIdx] !== '(Skipped)' ? answers[prevIdx] : '';
+      baseTranscriptRef.current = answers[prevIdx] && answers[prevIdx] !== '(Skipped)' ? answers[prevIdx] : '';
       speakText(questions[prevIdx]);
     }
   };
@@ -226,7 +238,7 @@ export function AIInterviewRoom({ format, domain, onReset }: AIInterviewRoomProp
     if (currentIndex < questions.length - 1) {
       const nextIdx = currentIndex + 1;
       setCurrentIndex(nextIdx);
-      currentInterimText.current = answers[nextIdx] && answers[nextIdx] !== '(Skipped)' ? answers[nextIdx] : '';
+      baseTranscriptRef.current = answers[nextIdx] && answers[nextIdx] !== '(Skipped)' ? answers[nextIdx] : '';
       speakText(questions[nextIdx]);
     }
   };
