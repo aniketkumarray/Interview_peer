@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { 
@@ -17,17 +17,65 @@ import {
 } from 'lucide-react';
 import { Navbar } from '@/components/navbar';
 import { SendInvitationModal } from '@/components/send-invitation-modal';
-import { MOCK_PEERS, ALL_BADGES } from '@/lib/demo-store';
-import { UserProfile } from '@/types';
+import { ALL_BADGES } from '@/lib/demo-store';
+import { UserProfile, InterviewFormat } from '@/types';
+import { createClient } from '@/lib/supabase/client';
 
 export default function PeerProfilePage() {
   const params = useParams();
   const router = useRouter();
   const peerId = params.id as string;
 
-  const peer = MOCK_PEERS.find((p) => p.id === peerId) || MOCK_PEERS[0];
+  const [peer, setPeer] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchPeer() {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*, profile_interview_types(format)')
+        .eq('id', peerId)
+        .single();
+
+      if (error || !data) {
+        setPeer(null);
+      } else {
+        setPeer({
+          ...data,
+          targetRole: data.target_role,
+          experienceLevel: data.experience_level,
+          avatarUrl: data.avatar_url,
+          verifiedInterviewCount: data.verified_interview_count,
+          leaderboardOptIn: data.leaderboard_opt_in,
+          formats: (data.profile_interview_types || []).map((f: any) => f.format) as InterviewFormat[],
+        } as UserProfile);
+      }
+      setLoading(false);
+    }
+    fetchPeer();
+  }, [peerId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center text-slate-400">
+        <div className="w-8 h-8 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mb-4" />
+        Loading profile...
+      </div>
+    );
+  }
+
+  if (!peer) {
+    return (
+      <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center text-slate-400">
+        <h1 className="text-2xl font-bold text-white mb-2">Peer Not Found</h1>
+        <p>The profile you are looking for does not exist or has been removed.</p>
+        <button onClick={() => router.back()} className="mt-4 text-teal-400 underline">Go Back</button>
+      </div>
+    );
+  }
 
   // Earned Badges
   const earnedBadges = ALL_BADGES.filter((b) => peer.verifiedInterviewCount >= b.countRequired);
