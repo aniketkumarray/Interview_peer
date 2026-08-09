@@ -6,6 +6,13 @@ import {
   generateFeedbackScorecard, 
   ComprehensiveScorecard 
 } from '@/app/actions/ai-interview';
+import {
+  getActiveSession,
+  createSession,
+  updateSession,
+  clearSession,
+  AIInterviewSession
+} from '@/lib/ai-session';
 import { 
   Mic, 
   Square, 
@@ -162,14 +169,34 @@ export function AIInterviewRoom({ format, domain, onReset }: AIInterviewRoomProp
     }
   }, [currentIndex]);
 
-  // Fetch 4 Questions upfront on mount
+  // Fetch 4 Questions upfront on mount — or restore from active session
   useEffect(() => {
     const loadQuestions = async () => {
       setIsLoadingQuestions(true);
       setError(null);
+      
+      // Check for an active session that matches this format + domain
+      const activeSession = getActiveSession();
+      if (activeSession && activeSession.format === format && activeSession.domain === domain) {
+        // Restore session — skip API call entirely
+        setQuestions(activeSession.questions);
+        setAnswers(activeSession.answers);
+        setCurrentIndex(activeSession.currentIndex);
+        setIsLoadingQuestions(false);
+        // Read out the current question
+        if (activeSession.questions[activeSession.currentIndex]) {
+          speakText(activeSession.questions[activeSession.currentIndex]);
+        }
+        return;
+      }
+      
       try {
         const qList = await fetchInitialQuestions(domain, format);
         setQuestions(qList);
+        
+        // Create a new session to persist these questions
+        createSession(format, domain, qList);
+        
         if (qList.length > 0) {
           speakText(qList[0]);
         }
@@ -187,6 +214,13 @@ export function AIInterviewRoom({ format, domain, onReset }: AIInterviewRoomProp
     loadQuestions();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Auto-save session progress whenever answers or currentIndex change
+  useEffect(() => {
+    if (questions.length > 0 && !feedback) {
+      updateSession({ answers, currentIndex });
+    }
+  }, [answers, currentIndex, questions.length, feedback]);
 
   const speakText = (text: string) => {
     if (synthesisRef.current) {
@@ -313,6 +347,8 @@ export function AIInterviewRoom({ format, domain, onReset }: AIInterviewRoomProp
     try {
       const result = await generateFeedbackScorecard(qaPairs);
       setFeedback(result);
+      // Session completed successfully — clear it from localStorage
+      clearSession();
     } catch (err: any) {
       setError(err.message || 'Failed to submit interview for evaluation.');
     } finally {
