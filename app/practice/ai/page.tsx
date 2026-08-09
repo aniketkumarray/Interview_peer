@@ -14,11 +14,12 @@ import {
 
 const INTERVIEW_FORMATS: InterviewFormat[] = [
   'Behavioral',
-  'System Design',
-  'Coding',
-  'Product Management',
+  'Domain / Role-Specific',
   'Case Interview',
-  'HR & Culture'
+  'Coding / Technical',
+  'System Design',
+  'Analytical / Quantitative',
+  'HR & Culture Fit'
 ];
 
 export default function AIPracticePage() {

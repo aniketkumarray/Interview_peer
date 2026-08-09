@@ -1,10 +1,11 @@
 export type InterviewFormat = 
   | 'Behavioral' 
-  | 'System Design' 
-  | 'Coding' 
-  | 'Product Management' 
+  | 'Domain / Role-Specific' 
   | 'Case Interview' 
-  | 'HR & Culture';
+  | 'Coding / Technical' 
+  | 'System Design' 
+  | 'Analytical / Quantitative'
+  | 'HR & Culture Fit';
 
 export type ExperienceLevel = 
   | 'Entry-level (0-2 yrs)' 

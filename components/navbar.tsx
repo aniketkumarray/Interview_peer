@@ -130,7 +130,7 @@ export function Navbar() {
                       <span>My Profile</span>
                     </Link>
                     <Link
-                      href="/onboarding"
+                      href="/profile?tab=availability"
                       onClick={() => setShowDropdown(false)}
                       className="flex items-center space-x-2 px-4 py-2.5 text-sm text-slate-300 hover:text-white hover:bg-white/5 transition"
                     >

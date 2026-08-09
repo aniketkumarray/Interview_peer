@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import Image from 'next/image';
 import { 
   User, 
@@ -16,18 +16,26 @@ import {
   X,
   Check,
   Camera,
-  Upload
+  Upload,
+  Target,
+  Clock,
+  Plus,
+  Trash2,
+  Calendar
 } from 'lucide-react';
 import { Navbar } from '@/components/navbar';
 import { ALL_BADGES } from '@/lib/demo-store';
 import { getMilestoneProgress } from '@/lib/gamification';
 import { useAuth } from '@/components/auth-context';
 import { createClient } from '@/lib/supabase/client';
-import { useRouter } from 'next/navigation';
-import { UserProfile, ExperienceLevel } from '@/types';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { UserProfile, ExperienceLevel, InterviewFormat, AvailabilityWindow } from '@/types';
 
-export default function ProfilePage() {
+function ProfileContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const tab = searchParams.get('tab');
+  
   const { user: authUser, loading: authLoading } = useAuth();
   const supabase = createClient();
 
@@ -36,8 +44,10 @@ export default function ProfilePage() {
   const [leaderboardOptIn, setLeaderboardOptIn] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Edit Modal State
+  // Edit Modal States
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isFormatsOpen, setIsFormatsOpen] = useState(tab === 'formats');
+  const [isAvailabilityOpen, setIsAvailabilityOpen] = useState(tab === 'availability');
   const [editForm, setEditForm] = useState({
     name: '',
     targetRole: '',
@@ -60,13 +70,26 @@ export default function ProfilePage() {
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          profile_interview_types (format),
+          availability_windows (id, day_of_week, start_time, end_time, timezone)
+        `)
         .eq('id', authUser.id)
         .single();
 
       if (error || !data) {
         router.push('/onboarding');
       } else {
+        const formats = (data.profile_interview_types || []).map((f: any) => f.format) as InterviewFormat[];
+        const availability = (data.availability_windows || []).map((w: any) => ({
+          id: w.id,
+          dayOfWeek: w.day_of_week,
+          startTime: w.start_time,
+          endTime: w.end_time,
+          timezone: w.timezone
+        })) as AvailabilityWindow[];
+
         const profile: UserProfile = {
           id: data.id,
           name: data.name,
@@ -77,8 +100,8 @@ export default function ProfilePage() {
           experienceLevel: data.experience_level,
           timezone: data.timezone,
           bio: data.bio,
-          formats: [],
-          availability: [],
+          formats: formats,
+          availability: availability,
           verifiedInterviewCount: data.verified_interview_count,
           leaderboardOptIn: data.leaderboard_opt_in,
           languages: data.languages || ['English'],
@@ -186,6 +209,91 @@ export default function ProfilePage() {
     reader.readAsDataURL(file);
   };
 
+  const handleSaveFormats = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    setSaving(true);
+    
+    // 1. Delete existing formats
+    await supabase.from('profile_interview_types').delete().eq('profile_id', user.id);
+    
+    // 2. Insert new formats
+    if (user.formats.length > 0) {
+      const formatsToInsert = user.formats.map(fmt => ({
+        profile_id: user.id,
+        format: fmt
+      }));
+      await supabase.from('profile_interview_types').insert(formatsToInsert);
+    }
+    
+    setSaving(false);
+    setIsFormatsOpen(false);
+    setToastMessage('Formats updated successfully!');
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleSaveAvailability = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    setSaving(true);
+    
+    // 1. Delete existing availability
+    await supabase.from('availability_windows').delete().eq('profile_id', user.id);
+    
+    // 2. Insert new availability
+    if (user.availability.length > 0) {
+      const windowsToInsert = user.availability.map(win => ({
+        profile_id: user.id,
+        day_of_week: win.dayOfWeek,
+        start_time: win.startTime,
+        end_time: win.endTime,
+        timezone: win.timezone
+      }));
+      await supabase.from('availability_windows').insert(windowsToInsert);
+    }
+    
+    setSaving(false);
+    setIsAvailabilityOpen(false);
+    setToastMessage('Availability updated successfully!');
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const toggleFormat = (fmt: InterviewFormat) => {
+    if (!user) return;
+    const current = user.formats || [];
+    const updated = current.includes(fmt) 
+      ? current.filter(f => f !== fmt) 
+      : [...current, fmt];
+    setUser({ ...user, formats: updated });
+  };
+
+  const addAvailabilityWindow = () => {
+    if (!user) return;
+    const newWindow: AvailabilityWindow = {
+      id: `w_${Date.now()}`,
+      dayOfWeek: 'Monday',
+      startTime: '18:00',
+      endTime: '21:00',
+      timezone: user.timezone || 'UTC+05:30 (India Standard Time, IST / New Delhi, Mumbai)',
+    };
+    setUser({ ...user, availability: [...(user.availability || []), newWindow] });
+  };
+
+  const removeAvailabilityWindow = (id: string) => {
+    if (!user) return;
+    setUser({ ...user, availability: user.availability.filter(a => a.id !== id) });
+  };
+
+  const ALL_FORMATS: InterviewFormat[] = [
+    'Behavioral',
+    'Domain / Role-Specific',
+    'Case Interview',
+    'Coding / Technical',
+    'System Design',
+    'Analytical / Quantitative',
+    'HR & Culture Fit',
+  ];
+
   if (loading || authLoading) {
     return (
       <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center">
@@ -273,6 +381,67 @@ export default function ProfilePage() {
                 {user.bio || 'No bio added yet.'}
               </p>
             </div>
+          </div>
+        </div>
+
+        {/* Formats and Availability Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          {/* Formats Card */}
+          <div className="glass-panel p-6 rounded-[2rem] border border-white/10 bg-white/5 flex flex-col h-full">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-base text-white flex items-center gap-2">
+                <Target className="w-5 h-5 text-sandow-400" />
+                <span>Interview Formats</span>
+              </h3>
+              <button
+                onClick={() => setIsFormatsOpen(true)}
+                className="text-xs text-sandow-400 hover:text-sandow-300 transition underline font-semibold"
+              >
+                Edit
+              </button>
+            </div>
+            {user.formats && user.formats.length > 0 ? (
+              <div className="flex flex-wrap gap-2 mt-auto">
+                {user.formats.map((fmt) => (
+                  <span
+                    key={fmt}
+                    className="px-3 py-1.5 rounded-full bg-black/60 text-sandow-400 border border-sandow-500/20 text-[11px] font-semibold tracking-wide"
+                  >
+                    # {fmt}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-500 italic mt-auto">No formats selected.</p>
+            )}
+          </div>
+
+          {/* Availability Card */}
+          <div className="glass-panel p-6 rounded-[2rem] border border-white/10 bg-white/5 flex flex-col h-full">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-base text-white flex items-center gap-2">
+                <Clock className="w-5 h-5 text-sandow-400" />
+                <span>Weekly Availability</span>
+              </h3>
+              <button
+                onClick={() => setIsAvailabilityOpen(true)}
+                className="text-xs text-sandow-400 hover:text-sandow-300 transition underline font-semibold"
+              >
+                Edit
+              </button>
+            </div>
+            {user.availability && user.availability.length > 0 ? (
+              <div className="space-y-2 mt-auto">
+                {user.availability.map((win) => (
+                  <div key={win.id} className="flex items-center justify-between px-3 py-2 rounded-xl bg-black/40 border border-white/5 text-xs">
+                    <span className="font-semibold text-white">{win.dayOfWeek}</span>
+                    <span className="text-slate-400">{win.startTime} - {win.endTime}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-500 italic mt-auto">No availability added.</p>
+            )}
           </div>
         </div>
 
@@ -508,7 +677,215 @@ export default function ProfilePage() {
           </div>
         </div>
       )}
+
+      {/* Edit Formats Modal */}
+      {isFormatsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setIsFormatsOpen(false)} />
+
+          <div className="relative w-full max-w-2xl bg-[#0A0A0A] border border-white/10 rounded-[2rem] p-6 shadow-2xl z-10 animate-fadeIn max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-6 sticky top-0 bg-[#0A0A0A] z-20">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <Target className="w-5 h-5 text-sandow-400" />
+                <span>Edit Interview Formats</span>
+              </h2>
+              <button onClick={() => setIsFormatsOpen(false)} className="p-1 rounded-full text-slate-400 hover:text-white hover:bg-white/10">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveFormats} className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {ALL_FORMATS.map((fmt) => {
+                  const isSelected = user?.formats?.includes(fmt);
+                  return (
+                    <button
+                      key={fmt}
+                      type="button"
+                      onClick={() => toggleFormat(fmt)}
+                      className={`p-4 rounded-xl text-left border transition-all flex items-start justify-between ${
+                        isSelected
+                          ? 'bg-sandow-500/20 border-sandow-500/50 text-white shadow-md'
+                          : 'bg-black/40 border-white/5 text-slate-400 hover:border-white/10'
+                      }`}
+                    >
+                      <div>
+                        <div className="font-semibold text-white">{fmt}</div>
+                        <div className="text-xs text-slate-400 mt-1">
+                          {fmt === 'Behavioral' && 'Past experience, conflict resolution, leadership, teamwork'}
+                          {fmt === 'Domain / Role-Specific' && 'Core competency questions tailored to the selected role'}
+                          {fmt === 'Case Interview' && 'Business problems, market sizing, strategy scenarios'}
+                          {fmt === 'Coding / Technical' && 'For engineering and technical roles'}
+                          {fmt === 'System Design' && 'For senior/technical roles'}
+                          {fmt === 'Analytical / Quantitative' && 'Data interpretation, estimation, metrics reasoning'}
+                          {fmt === 'HR & Culture Fit' && 'Motivation, values alignment, expectations'}
+                        </div>
+                      </div>
+                      {isSelected && <CheckCircle2 className="w-5 h-5 text-sandow-400 shrink-0 mt-0.5" />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="pt-6 border-t border-white/10 flex justify-end gap-3 sticky bottom-0 bg-[#0A0A0A] py-4">
+                <button
+                  type="button"
+                  onClick={() => setIsFormatsOpen(false)}
+                  className="px-6 py-2.5 rounded-xl text-sm font-bold text-slate-300 hover:text-white transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="px-6 py-2.5 rounded-xl bg-sandow-500 hover:bg-sandow-400 text-white text-sm font-bold transition shadow-lg disabled:opacity-50 flex items-center gap-2"
+                >
+                  {saving ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    'Save Formats'
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Availability Modal */}
+      {isAvailabilityOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setIsAvailabilityOpen(false)} />
+
+          <div className="relative w-full max-w-2xl bg-[#0A0A0A] border border-white/10 rounded-[2rem] p-6 shadow-2xl z-10 animate-fadeIn max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-6 sticky top-0 bg-[#0A0A0A] z-20">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-sandow-400" />
+                <span>Edit Weekly Availability</span>
+              </h2>
+              <button onClick={() => setIsAvailabilityOpen(false)} className="p-1 rounded-full text-slate-400 hover:text-white hover:bg-white/10">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveAvailability} className="space-y-6">
+              <div className="space-y-4">
+                {user?.availability?.map((win, index) => (
+                  <div key={win.id} className="p-4 rounded-xl bg-black/40 border border-white/5 flex flex-col sm:flex-row gap-4 items-end sm:items-center">
+                    <div className="grid grid-cols-3 gap-4 flex-1 w-full">
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Day</label>
+                        <select
+                          value={win.dayOfWeek}
+                          onChange={(e) => {
+                            const newAvail = [...(user.availability || [])];
+                            newAvail[index].dayOfWeek = e.target.value as any;
+                            setUser({ ...user, availability: newAvail });
+                          }}
+                          className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-sandow-500"
+                        >
+                          {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(d => (
+                            <option key={d} value={d}>{d}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Start Time</label>
+                        <input
+                          type="time"
+                          value={win.startTime}
+                          onChange={(e) => {
+                            const newAvail = [...(user.availability || [])];
+                            newAvail[index].startTime = e.target.value;
+                            setUser({ ...user, availability: newAvail });
+                          }}
+                          className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-sandow-500 [color-scheme:dark]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">End Time</label>
+                        <input
+                          type="time"
+                          value={win.endTime}
+                          onChange={(e) => {
+                            const newAvail = [...(user.availability || [])];
+                            newAvail[index].endTime = e.target.value;
+                            setUser({ ...user, availability: newAvail });
+                          }}
+                          className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-sandow-500 [color-scheme:dark]"
+                        />
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeAvailabilityWindow(win.id)}
+                      className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition shrink-0 h-[38px] w-[38px] flex items-center justify-center"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+
+                {(!user?.availability || user.availability.length === 0) && (
+                  <div className="text-center py-8 px-4 rounded-xl border border-dashed border-white/10">
+                    <p className="text-sm text-slate-400">No availability windows set.</p>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={addAvailabilityWindow}
+                  className="w-full py-3 rounded-xl border border-dashed border-sandow-500/30 text-sandow-400 font-semibold text-sm hover:bg-sandow-500/10 transition flex items-center justify-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add Time Window</span>
+                </button>
+              </div>
+
+              <div className="pt-6 border-t border-white/10 flex justify-end gap-3 sticky bottom-0 bg-[#0A0A0A] py-4">
+                <button
+                  type="button"
+                  onClick={() => setIsAvailabilityOpen(false)}
+                  className="px-6 py-2.5 rounded-xl text-sm font-bold text-slate-300 hover:text-white transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="px-6 py-2.5 rounded-xl bg-sandow-500 hover:bg-sandow-400 text-white text-sm font-bold transition shadow-lg disabled:opacity-50 flex items-center gap-2"
+                >
+                  {saving ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    'Save Availability'
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#0A0A0A] flex flex-col items-center justify-center">
+        <div className="w-10 h-10 border-4 border-sandow-500 border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 text-slate-400 font-medium">Loading profile...</p>
+      </div>
+    }>
+      <ProfileContent />
+    </Suspense>
   );
 }
 

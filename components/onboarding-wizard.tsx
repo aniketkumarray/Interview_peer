@@ -24,11 +24,12 @@ import { MOCK_CURRENT_USER } from '@/lib/demo-store';
 
 const ALL_FORMATS: InterviewFormat[] = [
   'Behavioral',
-  'System Design',
-  'Coding',
-  'Product Management',
+  'Domain / Role-Specific',
   'Case Interview',
-  'HR & Culture',
+  'Coding / Technical',
+  'System Design',
+  'Analytical / Quantitative',
+  'HR & Culture Fit',
 ];
 
 const EXPERIENCE_LEVELS: ExperienceLevel[] = [
@@ -405,12 +406,13 @@ export function OnboardingWizard() {
                   <div>
                     <div className="font-semibold text-white">{fmt}</div>
                     <div className="text-xs text-slate-400 mt-1">
-                      {fmt === 'System Design' && 'Architecture, scalability, trade-offs'}
-                      {fmt === 'Coding' && 'Algorithms, data structures, edge cases'}
-                      {fmt === 'Behavioral' && 'STAR format, leadership principles'}
-                      {fmt === 'Product Management' && 'Product sense, execution, metrics'}
-                      {fmt === 'Case Interview' && 'Market entry, profitability, framework'}
-                      {fmt === 'HR & Culture' && 'Elevator pitch, salary negotiation'}
+                      {fmt === 'Behavioral' && 'Past experience, conflict resolution, leadership, teamwork'}
+                      {fmt === 'Domain / Role-Specific' && 'Core competency questions tailored to the selected role'}
+                      {fmt === 'Case Interview' && 'Business problems, market sizing, strategy scenarios'}
+                      {fmt === 'Coding / Technical' && 'For engineering and technical roles'}
+                      {fmt === 'System Design' && 'For senior/technical roles'}
+                      {fmt === 'Analytical / Quantitative' && 'Data interpretation, estimation, metrics reasoning'}
+                      {fmt === 'HR & Culture Fit' && 'Motivation, values alignment, expectations'}
                     </div>
                   </div>
                   {isSelected && <CheckCircle2 className="w-5 h-5 text-teal-400 shrink-0 mt-0.5" />}

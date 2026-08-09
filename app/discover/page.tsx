@@ -232,11 +232,13 @@ export default function DiscoverPage() {
               className="px-4 py-3 rounded-[1rem] bg-black/40 border border-white/5 text-white text-sm focus:outline-none focus:border-sandow-500"
             >
               <option value="ALL">All Formats</option>
-              <option value="System Design">System Design</option>
-              <option value="Coding">Coding</option>
               <option value="Behavioral">Behavioral</option>
-              <option value="Product Management">Product Management</option>
+              <option value="Domain / Role-Specific">Domain / Role-Specific</option>
               <option value="Case Interview">Case Interview</option>
+              <option value="Coding / Technical">Coding / Technical</option>
+              <option value="System Design">System Design</option>
+              <option value="Analytical / Quantitative">Analytical / Quantitative</option>
+              <option value="HR & Culture Fit">HR & Culture Fit</option>
             </select>
 
             {/* Experience Filter */}

@@ -21,7 +21,7 @@ export const MOCK_CURRENT_USER: UserProfile = {
   timezone: 'UTC-5 (EST)',
   languages: ['English', 'Spanish'],
   bio: 'Ex-Stripe engineer preparing for L6 System Design and Senior Frontend architecture interviews. Happy to give detailed feedback on coding & system design!',
-  formats: ['System Design', 'Coding', 'Behavioral'],
+  formats: ['System Design', 'Coding / Technical', 'Behavioral'],
   availability: [
     { id: 'a1', dayOfWeek: 'Monday', startTime: '17:00', endTime: '20:00', timezone: 'UTC-5' },
     { id: 'a2', dayOfWeek: 'Wednesday', startTime: '18:00', endTime: '21:00', timezone: 'UTC-5' },
@@ -44,7 +44,7 @@ export const MOCK_PEERS: UserProfile[] = [
     timezone: 'UTC-8 (PST)',
     languages: ['English', 'Mandarin'],
     bio: 'Infrastructure tech lead preparing for Big Tech Staff loops. Focused on scalability, RPC design, and STAR behavioral stories.',
-    formats: ['System Design', 'Behavioral', 'Coding'],
+    formats: ['System Design', 'Behavioral', 'Coding / Technical'],
     availability: [
       { id: 's1', dayOfWeek: 'Tuesday', startTime: '18:00', endTime: '21:00', timezone: 'UTC-8' },
       { id: 's2', dayOfWeek: 'Thursday', startTime: '18:00', endTime: '21:00', timezone: 'UTC-8' },
@@ -65,7 +65,7 @@ export const MOCK_PEERS: UserProfile[] = [
     timezone: 'UTC-5 (EST)',
     languages: ['English'],
     bio: 'Product manager targeting L5 PM roles at Google & Meta. Looking for peer practice on Product Sense, Product Execution, and Leadership.',
-    formats: ['Product Management', 'Behavioral', 'Case Interview'],
+    formats: ['Domain / Role-Specific', 'Behavioral', 'Case Interview'],
     availability: [
       { id: 'm1', dayOfWeek: 'Monday', startTime: '19:00', endTime: '21:00', timezone: 'UTC-5' },
       { id: 'm2', dayOfWeek: 'Friday', startTime: '17:00', endTime: '20:00', timezone: 'UTC-5' },
@@ -85,7 +85,7 @@ export const MOCK_PEERS: UserProfile[] = [
     timezone: 'UTC+5.5 (IST)',
     languages: ['English', 'Hindi'],
     bio: 'Recent CS grad prepping for SDE-1 coding rounds and data structure problems. Love solving LeetCode Medium/Hard graphs & DP.',
-    formats: ['Coding', 'Behavioral'],
+    formats: ['Coding / Technical', 'Behavioral'],
     availability: [
       { id: 'p1', dayOfWeek: 'Wednesday', startTime: '20:00', endTime: '23:00', timezone: 'UTC+5.5' },
       { id: 'p2', dayOfWeek: 'Saturday', startTime: '15:00', endTime: '19:00', timezone: 'UTC+5.5' },
@@ -105,7 +105,7 @@ export const MOCK_PEERS: UserProfile[] = [
     timezone: 'UTC+1 (CET)',
     languages: ['English', 'German'],
     bio: 'Prepping for McKinsey & BCG case interviews. Strong with market sizing, profitability trees, and synthesis.',
-    formats: ['Case Interview', 'Behavioral', 'HR & Culture'],
+    formats: ['Case Interview', 'Behavioral', 'HR & Culture Fit'],
     availability: [
       { id: 'e1', dayOfWeek: 'Thursday', startTime: '18:00', endTime: '21:00', timezone: 'UTC+1' },
       { id: 'e2', dayOfWeek: 'Sunday', startTime: '11:00', endTime: '15:00', timezone: 'UTC+1' },
@@ -177,7 +177,7 @@ export const MOCK_SESSIONS: Session[] = [
     user2Id: 'usr_priya',
     partnerName: 'Priya Sharma',
     partnerRole: 'Backend Engineer',
-    format: 'Coding',
+    format: 'Coding / Technical',
     durationMinutes: 45,
     scheduledAt: '2026-07-20T15:00:00Z',
     jitsiRoomUrl: 'https://meet.jit.si/mock-peer-sess_100-alg',

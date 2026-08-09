@@ -20,7 +20,7 @@ export function EditInvitationModal({ invitation, onClose, onSave }: EditInvitat
   if (!invitation) return null;
 
   // Form formats list
-  const formats: InterviewFormat[] = ['Behavioral', 'System Design', 'Coding', 'Product Management', 'Case Interview', 'HR & Culture'];
+  const formats: InterviewFormat[] = ['Behavioral', 'Domain / Role-Specific', 'Case Interview', 'Coding / Technical', 'System Design', 'Analytical / Quantitative', 'HR & Culture Fit'];
 
   const [selectedFormat, setSelectedFormat] = useState<string>(invitation.format);
   const [duration, setDuration] = useState<number>(invitation.durationMinutes || 45);
