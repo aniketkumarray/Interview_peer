@@ -188,15 +188,13 @@ function MessagesContent() {
       <Navbar />
 
       <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex flex-col">
-        {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-sandow-500/15 border border-sandow-500/30 text-sandow-400 text-xs font-semibold mb-2">
-              <MessageSquare className="w-3.5 h-3.5" />
-              <span>PeerBuddies Chat</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white">Direct Messaging</h1>
+        {/* Header (Hidden on mobile when chat is active to maximize keyboard space) */}
+        <div className={`mb-4 sm:mb-6 ${mobileShowChat ? 'hidden md:block' : 'block'}`}>
+          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-sandow-500/15 border border-sandow-500/30 text-sandow-400 text-xs font-semibold mb-1.5 sm:mb-2">
+            <MessageSquare className="w-3.5 h-3.5" />
+            <span>PeerBuddies Chat</span>
           </div>
+          <h1 className="text-xl sm:text-3xl font-extrabold text-white">Direct Messaging</h1>
         </div>
 
         {/* Messaging Interface */}
@@ -222,7 +220,7 @@ function MessagesContent() {
             </button>
           </div>
         ) : (
-          <div className="flex-1 glass-panel rounded-[2rem] border border-white/10 bg-white/5 overflow-hidden flex h-[650px]">
+          <div className="flex-1 glass-panel rounded-2xl sm:rounded-[2rem] border border-white/10 bg-white/5 overflow-hidden flex h-[calc(100dvh-7.5rem)] md:h-[650px] max-h-[100dvh]">
             {/* Sidebar: PeerBuddies List */}
             <div
               className={`w-full md:w-80 border-r border-white/10 flex flex-col shrink-0 ${
@@ -293,14 +291,14 @@ function MessagesContent() {
 
             {/* Main Content: Chat Window */}
             <div
-              className={`flex-1 flex flex-col bg-black/30 ${
+              className={`flex-1 flex flex-col bg-black/30 min-h-0 ${
                 !mobileShowChat ? 'hidden md:flex' : 'flex'
               }`}
             >
               {activeBuddy ? (
                 <>
                   {/* Chat Header */}
-                  <div className="p-4 border-b border-white/10 flex items-center justify-between bg-black/40">
+                  <div className="p-3 sm:p-4 border-b border-white/10 flex items-center justify-between bg-black/40 shrink-0">
                     <div className="flex items-center gap-3">
                       <button
                         onClick={() => setMobileShowChat(false)}
@@ -342,7 +340,7 @@ function MessagesContent() {
                   </div>
 
                   {/* Messages Scroll Area */}
-                  <div className="flex-1 p-4 overflow-y-auto space-y-3">
+                  <div className="flex-1 p-3 sm:p-4 overflow-y-auto space-y-3 min-h-0">
                     {loadingChat ? (
                       <div className="flex flex-col items-center justify-center h-full text-slate-400">
                         <div className="w-6 h-6 border-2 border-sandow-500 border-t-transparent rounded-full animate-spin mb-2" />
@@ -383,8 +381,8 @@ function MessagesContent() {
                     <div ref={messagesEndRef} />
                   </div>
 
-                  {/* Input Form */}
-                  <form onSubmit={handleSendMessage} className="p-4 border-t border-white/10 bg-black/40 flex items-center gap-3">
+                  {/* Input Form (Fixed at bottom with shrink-0 so keyboard never covers it) */}
+                  <form onSubmit={handleSendMessage} className="p-3 sm:p-4 border-t border-white/10 bg-[#0A0A0A] flex items-center gap-2 sm:gap-3 shrink-0">
                     <input
                       type="text"
                       placeholder={`Message ${activeBuddy.peer.name}...`}
