@@ -48,65 +48,111 @@ export function AIInterviewRoom({ format, domain, onReset }: AIInterviewRoomProp
   
   const recognitionRef = useRef<any>(null);
   const synthesisRef = useRef<SpeechSynthesis | null>(null);
-  // Tracks text accumulated before the current recording session started
+  // Tracks text accumulated before the current recognition session started
   const baseTranscriptRef = useRef<string>('');
+  // Tracks whether the user intends to be recording (for mobile auto-restart)
+  const wantsRecordingRef = useRef<boolean>(false);
+  // Detect mobile browser
+  const isMobileRef = useRef<boolean>(false);
 
   // Speech Recognition & Synthesis Initialization
   useEffect(() => {
     if (typeof window !== 'undefined') {
       synthesisRef.current = window.speechSynthesis;
       
+      // Detect mobile: Android, iPhone, iPad, or mobile user agents
+      const ua = navigator.userAgent || '';
+      isMobileRef.current = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+      
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (SpeechRecognition) {
         const recognition = new SpeechRecognition();
-        recognition.continuous = true;
+        
+        // Mobile: use non-continuous mode to avoid duplication bugs
+        // Desktop: use continuous mode which works correctly
+        recognition.continuous = !isMobileRef.current;
         recognition.interimResults = true;
         recognition.lang = (navigator.language && navigator.language.length > 0) ? navigator.language : 'en-US';
-        // Limit to single best alternative to reduce noise on mobile
         recognition.maxAlternatives = 1;
         
         recognition.onresult = (event: any) => {
-          let sessionFinal = '';
-          let sessionInterim = '';
-          
-          // Only process results from the current recognition session
-          for (let i = event.resultIndex; i < event.results.length; ++i) {
-            const result = event.results[i];
-            const transcript = result[0].transcript;
-            if (result.isFinal) {
-              sessionFinal += transcript;
+          if (isMobileRef.current) {
+            // MOBILE STRATEGY: Non-continuous mode, one phrase at a time
+            // Each recognition session produces a single result group
+            // We only care about the latest result in this session
+            const lastResult = event.results[event.results.length - 1];
+            const transcript = lastResult[0].transcript;
+            
+            if (lastResult.isFinal) {
+              // Phrase is finalized — commit it to the base
+              baseTranscriptRef.current = (baseTranscriptRef.current + transcript + ' ').replace(/\s+/g, ' ');
+              setAnswers(prev => {
+                const updated = [...prev];
+                updated[currentIndex] = baseTranscriptRef.current.trim();
+                return updated;
+              });
             } else {
-              // Only take the last interim result to avoid duplicating partial recognitions
-              sessionInterim = transcript;
+              // Show interim: base + current partial phrase
+              const combined = (baseTranscriptRef.current + transcript).trim();
+              setAnswers(prev => {
+                const updated = [...prev];
+                updated[currentIndex] = combined;
+                return updated;
+              });
             }
+          } else {
+            // DESKTOP STRATEGY: Continuous mode with event.resultIndex tracking
+            let sessionFinal = '';
+            let sessionInterim = '';
+            
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+              const result = event.results[i];
+              const transcript = result[0].transcript;
+              if (result.isFinal) {
+                sessionFinal += transcript;
+              } else {
+                sessionInterim = transcript;
+              }
+            }
+            
+            const base = baseTranscriptRef.current;
+            const combined = (base + sessionFinal + sessionInterim).trim();
+            
+            if (sessionFinal) {
+              baseTranscriptRef.current = (base + sessionFinal).trimStart();
+            }
+            
+            setAnswers(prev => {
+              const updated = [...prev];
+              updated[currentIndex] = combined;
+              return updated;
+            });
           }
-          
-          // Build full answer: base (pre-existing) + session final + current interim
-          const base = baseTranscriptRef.current;
-          const combined = (base + sessionFinal + sessionInterim).trim();
-          
-          // When we get final results, update the base so future interim results don't duplicate
-          if (sessionFinal) {
-            baseTranscriptRef.current = (base + sessionFinal).trimStart();
-          }
-          
-          setAnswers(prev => {
-            const updated = [...prev];
-            updated[currentIndex] = combined;
-            return updated;
-          });
         };
 
         recognition.onerror = (event: any) => {
           console.error("Speech recognition error:", event.error);
           if (event.error !== 'aborted' && event.error !== 'no-speech') {
             setError(`Microphone notice: ${event.error}. You can also type your answer directly in the box below.`);
+            wantsRecordingRef.current = false;
             setIsRecording(false);
           }
         };
 
         recognition.onend = () => {
-          setIsRecording(false);
+          if (isMobileRef.current && wantsRecordingRef.current) {
+            // Mobile auto-restart: the engine stopped after one phrase,
+            // but the user still wants to record — restart immediately
+            try {
+              recognition.start();
+            } catch (e) {
+              // If restart fails, stop recording gracefully
+              wantsRecordingRef.current = false;
+              setIsRecording(false);
+            }
+          } else {
+            setIsRecording(false);
+          }
         };
 
         recognitionRef.current = recognition;
@@ -178,6 +224,7 @@ export function AIInterviewRoom({ format, domain, onReset }: AIInterviewRoomProp
     if (isSubmitting || feedback) return;
 
     if (isRecording) {
+      wantsRecordingRef.current = false;
       try { recognitionRef.current?.stop(); } catch (e) {}
       setIsRecording(false);
     } else {
@@ -186,9 +233,11 @@ export function AIInterviewRoom({ format, domain, onReset }: AIInterviewRoomProp
       baseTranscriptRef.current = answers[currentIndex] && answers[currentIndex] !== '(Skipped)' ? answers[currentIndex] + ' ' : '';
       setError(null);
       try {
+        wantsRecordingRef.current = true;
         recognitionRef.current?.start();
         setIsRecording(true);
       } catch (e) {
+        wantsRecordingRef.current = false;
         console.error(e);
       }
     }
@@ -196,6 +245,7 @@ export function AIInterviewRoom({ format, domain, onReset }: AIInterviewRoomProp
 
   const handleNextQuestion = () => {
     if (isRecording) {
+      wantsRecordingRef.current = false;
       try { recognitionRef.current?.stop(); } catch (e) {}
       setIsRecording(false);
     }
@@ -210,6 +260,7 @@ export function AIInterviewRoom({ format, domain, onReset }: AIInterviewRoomProp
 
   const handlePrevQuestion = () => {
     if (isRecording) {
+      wantsRecordingRef.current = false;
       try { recognitionRef.current?.stop(); } catch (e) {}
       setIsRecording(false);
     }
@@ -224,6 +275,7 @@ export function AIInterviewRoom({ format, domain, onReset }: AIInterviewRoomProp
 
   const handleSkipQuestion = () => {
     if (isRecording) {
+      wantsRecordingRef.current = false;
       try { recognitionRef.current?.stop(); } catch (e) {}
       setIsRecording(false);
     }
@@ -245,6 +297,7 @@ export function AIInterviewRoom({ format, domain, onReset }: AIInterviewRoomProp
 
   const handleSubmitAll = async () => {
     if (isRecording) {
+      wantsRecordingRef.current = false;
       try { recognitionRef.current?.stop(); } catch (e) {}
       setIsRecording(false);
     }
