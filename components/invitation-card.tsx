@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Calendar, Clock, Check, X, RefreshCw, Send, CheckCircle2 } from 'lucide-react';
+import Link from 'next/link';
+import { Calendar, Clock, Check, X, RefreshCw, Send, CheckCircle2, MessageSquare } from 'lucide-react';
 import { Invitation } from '@/types';
 
 interface InvitationCardProps {
@@ -142,11 +143,18 @@ export function InvitationCard({ invitation, type, onAccept, onCounter, onDeclin
           )}
         </div>
       )}
-      {type === 'history' && invitation.status === 'accepted' && (
-        <div className="pt-4 border-t border-white/5 text-center">
-          <span className="text-xs text-teal-300/70 font-medium flex items-center justify-center gap-1.5">
-            <CheckCircle2 className="w-3.5 h-3.5" /> Accepted — Session Scheduled
+      {invitation.status === 'accepted' && (
+        <div className="pt-4 border-t border-white/5 flex items-center justify-between">
+          <span className="text-xs text-sandow-400 font-medium flex items-center gap-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5 text-sandow-400" /> Confirmed Practice Session
           </span>
+          <Link
+            href={`/messages?peerId=${invitation.receiverId === 'usr_me' ? invitation.senderId : invitation.receiverId}`}
+            className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-sandow-500 hover:bg-sandow-400 text-white transition flex items-center gap-1.5 shadow-[0_0_12px_rgba(255,107,0,0.4)]"
+          >
+            <MessageSquare className="w-3 h-3" />
+            <span>Chat</span>
+          </Link>
         </div>
       )}
       {type === 'history' && invitation.status === 'declined' && (

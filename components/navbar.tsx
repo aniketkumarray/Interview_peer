@@ -18,6 +18,7 @@ import {
   Menu,
   X,
   Bot,
+  MessageSquare,
 } from 'lucide-react';
 import { NotificationsPopover } from '@/components/notifications-popover';
 
@@ -29,11 +30,12 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Routes that require auth — clicking these when unauthenticated redirects to login
-  const protectedRoutes = ['/invitations', '/sessions', '/profile', '/onboarding'];
+  const protectedRoutes = ['/invitations', '/sessions', '/profile', '/onboarding', '/messages'];
 
   const navItems = [
     { href: '/discover', label: 'Discover Peers', icon: Compass, requiresAuth: false },
     { href: '/practice/ai', label: 'AI Mock Practice', icon: Bot, requiresAuth: false },
+    { href: '/messages', label: 'Messages', icon: MessageSquare, requiresAuth: true },
     { href: '/invitations', label: 'Invitations', icon: Calendar, requiresAuth: true },
     { href: '/sessions', label: 'Sessions', icon: Video, requiresAuth: true },
     { href: '/leaderboard', label: 'Leaderboard', icon: Trophy, requiresAuth: false },

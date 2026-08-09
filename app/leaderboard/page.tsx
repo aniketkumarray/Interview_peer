@@ -3,13 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { Trophy, Award, Info, ShieldCheck, CheckCircle2, Loader2, AlertTriangle } from 'lucide-react';
 import { Navbar } from '@/components/navbar';
-import { getLeaderboard, toggleLeaderboardOptIn } from '@/app/actions/leaderboard';
+import { getLeaderboard } from '@/app/actions/leaderboard';
 
 export default function LeaderboardPage() {
   const [entries, setEntries] = useState<any[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [optIn, setOptIn] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -18,9 +17,6 @@ export default function LeaderboardPage() {
         const data = await getLeaderboard();
         setEntries(data.entries);
         setCurrentUserId(data.currentUserId);
-        // Check if current user is in the list (opted in)
-        const userEntry = data.entries.find((e: any) => e.userId === data.currentUserId);
-        setOptIn(!!userEntry);
       } catch (e) {
         console.error(e);
       } finally {
@@ -29,24 +25,6 @@ export default function LeaderboardPage() {
     }
     load();
   }, []);
-
-  const handleToggleOptIn = async () => {
-    try {
-      const res = await toggleLeaderboardOptIn();
-      setOptIn(res.optedIn);
-      setToastMessage(
-        res.optedIn
-          ? 'You have opted into the Weekly Leaderboard! Your verified sessions will now appear on rankings.'
-          : 'You have opted out of the Weekly Leaderboard. Your milestone badges remain intact.'
-      );
-      // Reload leaderboard
-      const data = await getLeaderboard();
-      setEntries(data.entries);
-      setTimeout(() => setToastMessage(null), 4000);
-    } catch (e: any) {
-      alert(e.message);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-slate-100 flex flex-col">
@@ -61,35 +39,15 @@ export default function LeaderboardPage() {
         )}
 
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          <div>
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs font-semibold mb-2">
-              <Trophy className="w-3.5 h-3.5" />
-              <span>Top 20 Rankings</span>
-            </div>
-            <h1 className="text-3xl font-extrabold text-white">Peer Practice Leaderboard</h1>
-            <p className="text-slate-400 text-sm mt-1">
-              Ranks opted-in job seekers by verified mock interviews completed. Score only counts after both participants confirm and submit feedback.
-            </p>
+        <div className="mb-8">
+          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-sandow-500/15 border border-sandow-500/30 text-sandow-400 text-xs font-semibold mb-2">
+            <Trophy className="w-3.5 h-3.5" />
+            <span>Top 20 Rankings</span>
           </div>
-
-          {/* Opt-In Toggle Button */}
-          <div className="glass-panel p-4 rounded-2xl border border-white/10 flex items-center space-x-4 shrink-0">
-            <div>
-              <div className="text-xs font-bold text-white">Leaderboard Participation</div>
-              <div className="text-[11px] text-slate-400">{optIn ? 'Active (Opted-in)' : 'Hidden (Opted-out)'}</div>
-            </div>
-            <button
-              onClick={handleToggleOptIn}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
-                optIn
-                  ? 'bg-teal-500 text-slate-950 shadow-md shadow-teal-500/20'
-                  : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-              }`}
-            >
-              {optIn ? 'Opt-Out' : 'Opt-In Now'}
-            </button>
-          </div>
+          <h1 className="text-3xl font-extrabold text-white">Peer Practice Leaderboard</h1>
+          <p className="text-slate-400 text-sm mt-1">
+            Ranks opted-in job seekers by verified mock interviews completed. Score only counts after both participants confirm and submit feedback. You can manage your participation in your Profile settings.
+          </p>
         </div>
 
         {/* Leaderboard Table Card */}
