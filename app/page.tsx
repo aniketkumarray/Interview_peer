@@ -18,8 +18,10 @@ import {
 } from 'lucide-react';
 import { Navbar } from '@/components/navbar';
 import { ALL_BADGES } from '@/lib/demo-store';
+import { useAuth } from '@/components/auth-context';
 
 export default function LandingPage() {
+  const { user, loading } = useAuth();
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-slate-100 flex flex-col selection:bg-sandow-500 selection:text-white">
       <Navbar />
@@ -60,12 +62,14 @@ export default function LandingPage() {
               <span>Browse Compatible Peers</span>
               <ArrowRight className="w-4 h-4 ml-1" />
             </Link>
-            <Link
-              href="/login?tab=signup"
-              className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-10 py-4 rounded-full font-bold text-white bg-white/5 hover:bg-white/10 border border-white/10 shadow-lg transition-all"
-            >
-              <span>Sign Up Free</span>
-            </Link>
+            {!loading && !user && (
+              <Link
+                href="/login?tab=signup"
+                className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 px-10 py-4 rounded-full font-bold text-white bg-white/5 hover:bg-white/10 border border-white/10 shadow-lg transition-all"
+              >
+                <span>Sign Up Free</span>
+              </Link>
+            )}
           </div>
 
           {/* Trust Highlights */}
