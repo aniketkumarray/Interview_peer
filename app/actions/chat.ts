@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { revalidatePath } from 'next/cache';
 import { UserProfile } from '@/types';
 
 export interface PeerBuddy {
@@ -186,6 +187,8 @@ export async function sendMessageAction(peerId: string, content: string) {
     .single();
 
   if (error) throw error;
+
+  revalidatePath('/messages');
 
   return {
     id: data.id,
